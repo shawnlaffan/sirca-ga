@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This XML file is supposed to describe all options present
+     in a SIRCA control file. It describes its layout, field names,
+     descriptions, data types and default values
+
+
+     if a <field> as inner text, that is taken to be its default
+
+	     types
+	     	text
+		integer
+		boolean
+		formula
+
+		list
+		table
+		typedlist
+
+		filename
+		directory
+
+
+
+-->
+
+<!-- tree-node with hidden root (because has a <section> child) -->
+<controlfile>
+	<!-- tree-node -->
+	<section name='MODEL_CONTROLS'>
+
+		<!--
+	       	each <node> will be a tree-node below its parent 
+		since it has <field> children, it will open a
+		fields panel when clicked -->
+		<node min="1" labelfield="LABEL">
+			<field  name='LABEL' type='text'>
+				<description>label to identify this model</description>
+				<default value='species 1'/>
+			</field>
+			<field  name='NBRHOOD' type='formula'>
+				<description>neighbourhood</description>
+				<default value='$D&lt;=2000'/>
+			</field>
+			<field  name='MAXNBRHOOD' type='formula'>
+				<description>neighbourhood</description>
+				<default value='$D&lt;=2000'/>
+			</field>
+			<field  name='IMAGE_CELLSIZE' type='integer'>
+				<description>image cell size</description>
+				<default value='990' />
+			</field>
+			<field  name='DEFAULT_STATE' type='integer'>
+				<description></description>
+				<default value='0' />
+			</field>
+			<field  name='BANDWIDTH' type='integer'>
+				<description></description>
+				<default value='1000' />
+			</field>
+			<field  name='DEATH_IN_STATE' type='integer'>
+				<description></description>
+				<default value='2' />
+			</field>
+			<field  name='DENSITY_FILES' type='filename'>
+				<description></description>
+				<default value='' />
+			</field>
+			<field  name='OUTPUTDIR' type='directory'>
+				<description></description>
+				<default value='.' />
+			</field>
+			<field  name='WRITESTATESUBSET' type='list'>
+				<description>what states to wriet</description>
+				<innertype>integer</innertype>
+				<default>
+					<item value='1' />
+					<item value='2' />
+					<item value='3' />
+				</default>
+			</field>
+			<field  name='MAX_INTERACT_COUNT' type='list'>
+				<description>max interact count</description>
+				<innertype>integer</innertype>
+				<default>
+					<item value='8' />
+					<item value='8' />
+				</default>
+			</field>
+			<field  name='MAX_NBR_COUNT' type='list'>
+				<description>max interact count</description>
+				<innertype>integer</innertype>
+				<default>
+					<item value='4' />
+					<item value='8' />
+				</default>
+			</field>
+			<field  name='DENSITYPARAMS' type='list'>
+				<description>density parameters</description>
+				<innertype>integer</innertype>
+				<default>
+					<item value='0' />
+					<item value='40' />
+				</default>
+			</field>
+			<field  name='TRANSITIONS' type='table'>
+				<description>transition matrix</description>
+				<innertype>integer</innertype>
+				<default>
+					<row>
+						<col></col>
+						<col></col>
+					</row>
+					<row>
+						<col>7</col>
+						<col>13</col>
+					</row>
+					<row>
+						<col>14</col>
+						<col>17</col>
+					</row>
+					<row>
+						<col>90</col>
+						<col>120</col>
+					</row>
+				</default>
+			</field>
+			<field  name='DEATH_FUNCTION' type='table'>
+				<description>when to die</description>
+				<innertype>float</innertype>
+				<default>
+					<row>
+						<col>0</col>
+						<col>0</col>
+						<col>0</col>
+					</row>
+					<row>
+						<col>0.5</col>
+						<col>0.014999999999999999</col>
+						<col>0.014999999999999999</col>
+					</row>
+					<row>
+						<col>1</col>
+						<col>0</col>
+						<col>0</col>
+					</row>
+				</default>
+			</field>
+			<field name='GLOBAL_EVENTS' type='eventstable'>
+				<type name='CULL' display='Cull'>
+					<field name='fraction' type='float' min='0' max='1' default='0.5' />
+					<field name='state' type='integer' min='0' max='3' default='2' />
+				</type>
+				<type name='RAND_STATE_CHANGE' display='State Change'>
+					<field name='count' type='integer' min='0' default='5' />
+					<field name='state' type='integer' min='0' max='3' default='2' />
+				</type>
+			</field>
+		</node>
+	</section>
+
+	<!-- tree-node -->
+	<section name='GLOBAL_EVENTS'>
+
+		<!-- will open a panel with a list of entries. Each entry is further
+		editable in a dynamic panel. The type of the entry determines which
+		fields the dynamic panel will have -->
+		<typedlist>
+			<listed>
+				<col field='time' sort='yes' />
+				<col field='label' />
+			</listed>
+			<entry type='CULL'>
+				<field name='time' type='integer' min='0'>0</field>
+				<field name='label' type='string'>cull</field>
+				<field name='fraction' type='float' min='0' max='1'>0.5</field>
+				<field name='state' type='integer' min='0' max='3'>2</field>
+			</entry>
+			<entry type='RAND_STATE_CHANGE'>
+				<field name='time' type='integer' min='0'>0</field>
+				<field name='label' type='string'>state changes</field>
+				<field name='count' type='integer' min='0'>5</field>
+				<field name='state' type='integer' min='0' max='3'>2</field>
+			</entry>
+		</typedlist>
+	</section>
+
+	<!-- tree-node -->
+	<section name='MISC'>
+		<field  name='ITERATIONS' type='integer'>
+			<description></description>
+			<default value='2' />
+		</field>
+		<field  name='REPETITIONS' type='integer'>
+			<description></description>
+			<default value='2' />
+		</field>
+		<field  name='COLLATE_COORDS_BY_MODEL_RUN' type='boolean'>
+			<description></description>
+			<default value='0' />
+		</field>
+		<field  name='WRITE_IMAGE' type='boolean'>
+			<description></description>
+			<default value='0' />
+		</field>
+	</section>
+
+</controlfile>

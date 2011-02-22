@@ -1,0 +1,107 @@
+$VAR1 = {
+          'MODEL_RUNS' => '10',
+          'OUTPFX' => 'C:/sirca/data/output',
+          'MODELS' => [
+                        {
+                          'TRANSITIONS' => [
+                                             [],
+                                             [
+                                               '7',
+                                               '13'
+                                             ],
+                                             [
+                                               '14',
+                                               '17'
+                                             ],
+                                             [
+                                               '90',
+                                               '120'
+                                             ]
+                                           ],
+                          'LABEL' => 'pig',
+                          'MAXINTERACT' => '8',
+                          'WRITESTATESUBSET' => [
+                                                  '1',
+                                                  '2',
+                                                  '3'
+                                                ],
+                          'DEATHRATE' => [
+                                           [
+                                             '0',
+                                             '0',
+                                             '0'
+                                           ],
+                                           [
+                                             '0.5',
+                                             '0.014999999999999999',
+                                             '0.014999999999999999'
+                                           ],
+                                           [
+                                             '1',
+                                             '0',
+                                             '0'
+                                           ]
+                                         ],
+                          'DENSITYFILE' => 'C:/sirca/data/dens_pig.smp',
+                          'MAXNBRS' => '8',
+                          'BANDWIDTH' => '1000',
+                          'MAXNBRDIST' => '2000',
+                          'MINNBRDIST' => '1000',
+                          'DEATHINSTATE' => '2',
+                          'OUTPUTDIR' => 'C:/sirca/data/pig',
+                          'DENSITYPARAMS' => [
+                                               '0',
+                                               '40'
+                                             ],
+                          'DEFAULTSTATE' => '0',
+                          'CELLSIZE' => '990',
+                          'RAND_INIT' => [
+                                           {
+                                             'count' => '5',
+                                             'min' => '0.80000000000000004',
+                                             'max' => '1',
+                                             'state' => '2'
+                                           }
+                                         ]
+                        },
+                        {
+                          'TRANSITIONS' => [
+                                             [],
+                                             [
+                                               '4',
+                                               '7'
+                                             ],
+                                             [
+                                               '2',
+                                               '7'
+                                             ],
+                                             [
+                                               '90',
+                                               '180'
+                                             ]
+                                           ],
+                          'LABEL' => 'cow',
+                          'MINNBRDIST' => '1000',
+                          'MAXINTERACT' => '8',
+                          'DEATHINSTATE' => '2',
+                          'WRITESTATESUBSET' => [
+                                                  '1',
+                                                  '2',
+                                                  '3'
+                                                ],
+                          'DENSITYFILE' => 'C:/sirca/data/cattle_dnsty.smp',
+                          'OUTPUTDIR' => 'C:/sirca/data',
+                          'MAXNBRS' => '8',
+                          'BANDWIDTH' => '1000',
+                          'CELLSIZE' => '990',
+                          'DEFAULTSTATE' => '0',
+                          'DENSITYPARAMS' => [
+                                               '0',
+                                               '5'
+                                             ],
+                          'MAXNBRDIST' => '2000'
+                        }
+                      ],
+          'COLLATE_COORDS_BY_MODEL_RUN' => '0',
+          'ITERATIONS' => '100'
+        };

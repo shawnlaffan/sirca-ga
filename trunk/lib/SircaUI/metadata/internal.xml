@@ -1,0 +1,43 @@
+<!-- internal elementtree representation of a control file -->
+<controlfile>
+	<section name='MODEL_CONTROLS'>
+		<node>
+			<field name="NBRHOOD">$D&lt;2000</field>
+			<field name="TRANSITIONS">
+				<list>
+					<list></list>
+					<list><item>7</item><item>13</item></list>
+					<list><item>14</item><item>17</item></list>
+					<list><item>90</item><item>120</item></list>
+				</list>
+			</field>
+			<field name='MAX_INTERACT_COUNT'>
+				<list>
+					<item>8</item>
+					<item>8</item>
+				</list>
+			</field>
+			<field name='DEFAULT_STATE'>0</field>
+		</node>
+	</section>
+
+	<section name='GLOBAL_EVENTS'>
+		<node>
+			<field name='type'>CULL</field>
+			<field name='time'>40</field>
+			<field name='fraction'>0.5</field>
+			<field name='state'>2</field>
+		</node>
+		<node>
+			<field name='type'>RAND_STATE_CHANGE</field>
+			<field name='time'>0</field>
+			<field name='count'>5</field>
+			<field name='state'>2</field>
+		</node>
+	</section>
+
+	<section name='Misc'>
+		<field name='ITERATIONS'>5</field>
+
+	</section>
+</controlfile>

@@ -1,0 +1,25 @@
+<!-- SCHEMA prototype (unlikely to use -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name='controlfile' type='control_file' />
+
+	<!-- control file root -->
+	<xs:complexType name='control_file'>
+		<xs:sequence>
+			<xs:element name="MODEL_CONTROLS" type="model_controls" />
+			<xs:element name="GLOBAL_EVENTS" type="global_events" />
+			<xs:element name="Misc" type="misc" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- model controls -->
+	<xs:complexType name='model_controls'>
+		<xs:sequence>
+			<xs:element name="MODEL_CONTROLS" type="model_controls" />
+			<xs:element name="GLOBAL_EVENTS" type="global_events" />
+			<xs:element name="Misc" type="misc" />
+		</xs:sequence>
+	</xs:complexType>
+
+
+
+</xs:schema>

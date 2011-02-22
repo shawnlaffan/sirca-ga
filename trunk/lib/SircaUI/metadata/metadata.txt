@@ -1,0 +1,14 @@
+#  serves as a reference to tell the system what each argument is
+
+$VAR1 = {
+    'MODEL_RUNS' => { type => 'int', min => 1 },
+    'OUTPFX' => {type => 'directory' },
+    'MODELS' => {type => 'sublist', min => 1 },
+    'TRANSITIONS' =>    { type => 'table', rows => 4, cols => 2,
+                         inner => {type => 'int'},
+                        },
+    'DENSITYFILE' => { type => 'file', exists => 'try' },
+    'DENSITYPARAMS' => { type => 'table', rows => 1, cols => 1,
+                        inner => {type => 'int'} },
+    
+};

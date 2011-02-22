@@ -1,0 +1,6 @@
+#  python modukes required to run the GUI
+numpy
+pyyaml
+lxml
+matplotlib
+wxpython
