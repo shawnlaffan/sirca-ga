@@ -1,0 +1,10 @@
+GD
+Clone
+Win32::API::OutputDebugString
+Data::Structure::Util
+Log::Log4perl
+
+#all those for Biodiverse, but not for the Biodiverse GUI
+Bundle::BiodiverseNoGUI
+
+more to follow...

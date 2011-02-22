@@ -1,0 +1,10 @@
+# Default parameters set for each type
+# Also serves as documentation for available prameters
+$VAR1 = {
+    'int' => { min => undef, max => undef },
+    'string' => { maxlength => undef },
+    'directory' => {},
+    'file' => { exists => 'False'},
+    'sublist' => { min => undef, max => undef},
+    'table' => { rows => undef, cols => undef, inner => { type => 'string' }}
+};
