@@ -1,5 +1,6 @@
 #summary Publications describing and using Sirca (or its ancestors)
-#featured
+#labels Featured
+
 
 ==Publications using Sirca==
 
