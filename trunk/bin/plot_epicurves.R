@@ -1,5 +1,9 @@
 #  import all epicurve files in a folder and then plot them.
 
+#  Needs a major restructure so it actually works as functions.
+#  Some documentation would be helpful also.
+
+
 
 #load all the data
 load_files = function () {
@@ -118,7 +122,7 @@ plot_epi_coll_data2 {
                     
                     axis (1)  #  plot the axis
                     if (species == "cow") {
-                        title (ylab = paste ("state", state)
+                        title (ylab = get_state_label (state = state)
                                #, cex.lab = 1
                                )
                     }
@@ -206,15 +210,17 @@ plot_epi_coll_data {
                             #ylab = ylabel,
                             xlab = "time step"
                             )
-                    
+
+                    animal = get_animal_label (animal = species)
+
                     axis (1)  #  plot the axis
                     if (state == 1) {
-                        title (ylab = species, cex.lab = 1.5, font.lab = 2)
+                        title (ylab = animal, cex.lab = 1.5, font.lab = 2)
                     }
                     
                     mod_i = i %% 6
                     if (mod_i > 0 && mod_i < 4) {
-                        title (main = paste ("state", state), cex.main = 1.5)
+                        title (main = get_state_label(state=state), cex.main = 1.5)
                     }
 
                     i = i + 1
@@ -230,6 +236,30 @@ plot_epi_coll_data {
         dev.off()
     }
     
+}
+
+get_state_label = function (state=1) {
+    label = ""
+    if (state == 1) {
+        label = "Latent"
+    } else if (state == 2) {
+        label = "Infectious"
+    } else if (state == 3) {
+        label = "Recovered"
+    } else {
+        label = "Unknown state"
+    }
+    label
+}
+
+get_animal_label = function (animal="pig") {
+    label = ""
+    if (animal == "pig") {
+        label = "pigs"
+    } else if (animal == "cow") {
+        label = "cattle"
+    }
+    label
 }
 
 get_zero_data = function () {
@@ -250,7 +280,7 @@ get_zero_data = function () {
             epi_type = "density"
         }
         if (length(grep ("cow", file))) {
-            animal = "cow"
+            animal = "cattle"
         } else {
             animal = "pig"
         }
@@ -360,11 +390,11 @@ plot_epi = function (type="count") {
                 start = match[[1]]
                 end   = start +  attr(match, 'match.length') - 1
                 lab   = substr (base, start, end)
-                title (ylab = lab, cex.lab = 1.5, font.lab = 2)
+                title (ylab = get_animal_label(animal=lab), cex.lab = 1.5, font.lab = 2)
             }
             
             if ((i %% 6) < 4) {
-                title (main = paste ("state", state), cex.main = 1.5)
+                title (main = paste (get_state_label(state=state)), cex.main = 1.5)
                 
             }
     
