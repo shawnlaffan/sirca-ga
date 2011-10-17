@@ -16,7 +16,7 @@
 
   *  Laffan, S.W., Lubarsky, E., Ward, M.P. & Highfield, L.D. (2007) A geographic automata system for modelling disease outbreaks. In: MODSIM 2007 International Congress on Modelling and Simulation (eds. L. Oxley and D. Kulasiri), pp. 1252-1257. Modelling and Simulation Society of Australia and New Zealand, Lincoln, New Zealand.  http://www.mssanz.org.au/MODSIM07/papers/21_s46/AGeographic_s46_Taffan_.pdf
 
-  *  Laffan, S.W., Wang, Z. & Ward, M.P. (in press) The effect of neighbourhood definitions on spatio-temporal models of disease outbreaks: separation distance versus range overlap. Preventive Veterinary Medicine.  Accepted 26Mar2011.
+  *  Laffan, S.W., Wang, Z. & Ward, M.P. (2011) The effect of neighbourhood definitions on spatio-temporal models of disease outbreaks: separation distance versus range overlap. Preventive Veterinary Medicine, 102, 218-229.  http://dx.doi.org/10.1016/j.prevetmed.2011.07.009
 
   *  Ward, M.P., Laffan, S.W. & Highfield, L.D. (2007) The potential role of wild and feral animals as reservoirs of foot-and-mouth disease. Preventive Veterinary Medicine, 80, 9-23.  http://dx.doi.org/10.1016/j.prevetmed.2007.01.009
 
