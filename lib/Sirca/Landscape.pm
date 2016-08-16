@@ -20,7 +20,7 @@ sub new {
 
     my $self = bless {}, $class;
 
-    $self -> set_param (
+    $self -> set_params (
         REPETITIONS     => 10,
         ITERATIONS      => 10,
         OUTSUFFIX       => 'scs',
