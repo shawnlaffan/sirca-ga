@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Carp;
 
-use mylib;
+use rlib;
 
 use Sirca::Landscape;
 use Sirca::Population;
@@ -19,7 +19,7 @@ use File::Spec;
 use English qw { -no_match_vars };
 
 #  add the lib folder if needed
-eval 'use mylib';
+#eval 'use mylib';
 #use lib File::Spec->catfile( $Bin, '..', 'lib' );
 
 local $| = 1;
@@ -29,25 +29,25 @@ local $| = 1;
 
 my $filename = shift @ARGV;            #  input file, must be an arg
 my %generate = (
-    generate_epicurve_files      => 0,
+    generate_epicurve_files      => 1,
     generate_epicurve_data_files => 1,
-    generate_spatial             => 0,
-    generate_animations          => 0,
+    generate_spatial             => 1,
+    generate_animations          => 1,
 );
 
 my %options = (
-    repetitions_to_create => [1..1],   #  which repetitions to animate and create spatial data for?
+    repetitions_to_create => [1..10],   #  which repetitions to animate and create spatial data for?
     delete_image_files    => 1,        #  cleanup as we go
     states_to_track       => [1,2,3],  #  which model states to track?
 );
 
 
 my $landscape = eval {
-    Sirca::Landscape -> new (file => $filename)
+    Sirca::Landscape->new (file => $filename)
 };
 croak $EVAL_ERROR if $EVAL_ERROR;
 
-my $master_models = $landscape -> get_master_models;
+my $master_models = $landscape->get_master_models;
 
 while (my ($sub, $run) = each %generate) {
     next if not $run;
@@ -71,7 +71,7 @@ sub generate_spatial {
         #  (inefficient, but OK for the moment...)
         #  drop out if a repetition does not exist
         my @summary = eval {
-            $landscape -> rerun_one_repetition (
+            $landscape->rerun_one_repetition (
                 repetition => $repetition,
             );
         };
@@ -82,7 +82,7 @@ sub generate_spatial {
 
     
         foreach my $model ($landscape->get_current_models) {
-            my $pfx = basename($model -> get_param ('OUTPFX'));
+            my $pfx = basename($model->get_param ('OUTPFX'));
             my $file = $pfx . ".csv";
             $file = File::Spec->rel2abs($file);
 
@@ -99,8 +99,8 @@ sub generate_epicurve_data_files {
 
     my $states_to_track = $options{states_to_track};
     my %total_stats = (
-        count   => scalar $landscape -> get_model_count_stats_ref,
-        density => scalar $landscape -> get_model_density_stats_ref,
+        count   => scalar $landscape->get_model_count_stats_ref,
+        density => scalar $landscape->get_model_density_stats_ref,
     );
 
     my $i = 0;
@@ -182,13 +182,13 @@ sub generate_epicurve_files {
         #  now we generate the epicurves
         foreach my $type (qw /count density/) {
             foreach my $state (1..3) { #  CHEATING
-                my $stats = $landscape -> get_model_stats (
+                my $stats = $landscape->get_model_stats (
                     type       => $type,
                     model_iter => $i,
                     state      => $state,
                 );
                 
-                my $pfx = basename($master -> get_param ('OUTPFX'));
+                my $pfx = basename($master->get_param ('OUTPFX'));
                 my $file = $pfx
                          . "_EPICURVE_s$state"
                          . "_$type.csv";
@@ -210,11 +210,11 @@ sub generate_epicurve_files {
 sub generate_animations {
 
     foreach my $master (@$master_models) {
-        $master -> get_image_params;
+        $master->get_image_params;
         print "Getting base density image\n";
     
-        $master -> get_density_image;
-        $master -> set_param (WRITE_IMAGE => 1);
+        $master->get_density_image;
+        $master->set_param (WRITE_IMAGE => 1);
     }
 
     my @repetitions = @{$options{repetitions_to_create}};
@@ -222,10 +222,10 @@ sub generate_animations {
     REPETITION:
     foreach my $repetition (@repetitions) {
         
-        #  rebuild the model, writing the images out as we go 
+        #  replay the model, writing the images out as we go 
         #  skip if a repetition does not exist
         my @summary = eval {
-            $landscape -> rerun_one_repetition (repetition => $repetition);
+            $landscape->rerun_one_repetition (repetition => $repetition);
         };
         if ($EVAL_ERROR) {
             warn $EVAL_ERROR;
@@ -239,9 +239,9 @@ sub generate_animations {
             my $first_file = $files[0];
             
             my $file1 = shift @files;
-            my $image = GD::Image -> new ($file1);
-            my $gifdata = $image -> gifanimbegin (1, 0);
-            $gifdata .= $image -> gifanimadd (1, 0, 0, 20, 1);    # first frame
+            my $image = GD::Image->new ($file1);
+            my $gifdata = $image->gifanimbegin (1, 0);
+            $gifdata .= $image->gifanimadd (1, 0, 0, 20, 1);    # first frame
             my $last_image = $image;
     
             if ($options{delete_image_files}) {
@@ -251,16 +251,16 @@ sub generate_animations {
             while (my $file = shift @files) {
                 print "Adding $file\n";
                 # make a frame of right size
-                my $frame = GD::Image -> new($file);
-                $gifdata .= $frame -> gifanimadd (1, 0, 0, 20, 1, $last_image);     # add frame
-                #$gifdata .= $frame -> gifanimadd (1, 0, 0, 20, 1);     # add frame
+                my $frame = GD::Image->new($file);
+                $gifdata .= $frame->gifanimadd (1, 0, 0, 20, 1, $last_image);     # add frame
+                #$gifdata .= $frame->gifanimadd (1, 0, 0, 20, 1);     # add frame
                 $last_image = $frame;
                 
                 if ($options{delete_image_files}) {
                     unlink ($file);
                 }
             }
-            $gifdata .= $image -> gifanimend;   # finish the animated GIF
+            $gifdata .= $image->gifanimend;   # finish the animated GIF
             my $f_name = File::Spec->rel2abs ($first_file . 'anim.gif');
             print "Output animation is in $f_name\n";
             open (my $fh, '>', $f_name)
@@ -273,3 +273,4 @@ sub generate_animations {
 
     return;
 }
+
