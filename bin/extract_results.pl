@@ -30,14 +30,30 @@ use Getopt::Long::Descriptive;
 
 my ($opt, $usage) = describe_options(
   '%c <arguments>',
-  [ 'filename|f=s',  'The Sirca results file to extract results from', { required => 1 } ],
-  [ 'repetitions_to_create|r=s', 'Repetitions to create', {optional => 1, default => undef}],
-
-  [ 'generate_epicurve_files|gef=s',  'Generate epicurve files', {optional => 1, default => 1},
-  [ 'generate_epicurve_data_files|gedf=s',  'Generate epicurve data files', {optional => 1, default => 1},
-  [ 'generate_spatial|gspatial=s',  'Generate spatial data', {optional => 1, default => 1},
-  [ 'generate_animations|ganim=s',  'Generate dispersion animations', {optional => 1, default => 1},
-   
+  [ 'filename|f=s',
+    'The Sirca results file to extract results from',
+    { required => 1 }
+  ],
+  [ 'repetitions_to_extract|r=s',
+    'Repetitions to extract',
+    {optional => 1, default => undef}
+  ],
+  [ 'generate_epicurve_files|gef=s',
+    'Generate epicurve files',
+    {optional => 1, default => 1}
+  ],
+  [ 'generate_epicurve_data_files|gedf=s',
+    'Generate epicurve data files',
+    {optional => 1, default => 1}
+  ],
+  [ 'generate_spatial|gspatial=s',
+    'Generate spatial data',
+    {optional => 1, default => 1}
+  ],
+  [ 'generate_animations|ganim=s',
+    'Generate dispersion animations',
+    {optional => 1, default => 1}
+  ],
   [],
   [ 'help',       "print usage message and exit" ],
 );
@@ -46,7 +62,6 @@ if ($opt->help) {
     print($usage->text);
     exit;
 }
-
 
 my $filename = $opt->filename; #  input file, must be an arg
 
@@ -70,9 +85,9 @@ my %generate = (
        : undef,
 );
 
-my $reps_to_recreate = $opt->repetitions_to_create // 1;
+my $reps_to_extract = $opt->repetitions_to_extract // 1;
 my %options = (
-    repetitions_to_create => [eval "$reps_to_recreate"],   #  which repetitions to animate and create spatial data for?
+    repetitions_to_create => [eval "$reps_to_extract"], #  repetitions to animate and create spatial data from
     delete_image_files    => 1,        #  cleanup as we go
     states_to_track       => [1,2,3],  #  which model states to track?
 );
@@ -87,14 +102,14 @@ my $master_models = $landscape->get_master_models;
 
 while (my ($subname, $subref) = each %generate) {
     next if not $subref;
-    eval $subref->();  #  run the sub
+    eval {$subref->()};  #  run the sub
     croak $EVAL_ERROR if $EVAL_ERROR;
 }
 
 
-print "FINISHED\n";
+say 'FINISHED';
 
-exit 1;
+exit 0;
 
 
 sub generate_spatial {
