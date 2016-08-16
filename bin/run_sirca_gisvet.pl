@@ -11,7 +11,7 @@ use Carp;
 #use FindBin;
 use English qw { -no_match_vars };
 
-use mylib;
+use rlib;
 
 #  load up the user defined libs
 use Biodiverse::Config qw /use_base/;
