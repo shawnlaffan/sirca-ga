@@ -25,7 +25,7 @@ sub new {
     $self->set_population (population => $args{population});
     delete $args{population};
     
-    $self -> set_params (%args);
+    $self->set_params (%args);
     
     return $self;
 }
@@ -33,41 +33,41 @@ sub new {
 
 sub get_density {
     my $self = shift;
-    return $self -> get_param ('DENSITY');
+    return $self->get_param ('DENSITY');
 }
 
 sub get_density_pct {
     my $self = shift;
-    return $self -> get_param ('DENSITY_PCT');
+    return $self->get_param ('DENSITY_PCT');
 }
 
 sub get_density_orig {
     my $self = shift;
 
-    my $dens = $self -> get_param ('DENSITY_ORIG');
+    my $dens = $self->get_param ('DENSITY_ORIG');
     if (! defined $dens) {
-        $dens = $self -> get_density;
+        $dens = $self->get_density;
         #  assume we're about to change the density, so store this
-        $self -> set_param (DENSITY_ORIG => $dens);  
+        $self->set_param (DENSITY_ORIG => $dens);  
     }
     return $dens;
 }
 
 sub get_state {
     my $self =  shift;
-    return $self -> get_param ('STATE');
+    return $self->get_param ('STATE');
 }
 
 sub set_state {
     my $self = shift;
-    $self -> set_param (STATE => shift);
+    $self->set_param (STATE => shift);
     return;
 }
 
 sub get_coord_array {
     my $self = shift;
     my %args = @_;
-    my $array = $self -> get_param ('COORD_ARRAY')
+    my $array = $self->get_param ('COORD_ARRAY')
       || croak "Missing COORD_ARRAY parameter\n";
 
     return wantarray
@@ -79,7 +79,7 @@ sub get_current_state {
     my $self = shift;
     my %args = @_;
 
-    return $self -> get_state;
+    return $self->get_state;
 }
 
 #  record which population we are part of
@@ -109,13 +109,13 @@ sub get_spatial_params {
     my $self = shift;
     my %args = @_;
     
-    my $spatial_params = $self -> get_param ('SPATIAL_PARAMS');
+    my $spatial_params = $self->get_param ('SPATIAL_PARAMS');
 
     if (! defined $spatial_params) {
         my $spatial_conditions = $self->get_param ('NBRHOOD')
                                || $self->get_population->get_param('NBRHOOD');
 
-        $spatial_params = Biodiverse::SpatialParams -> new (
+        $spatial_params = Biodiverse::SpatialParams->new (
             conditions          => $spatial_conditions,
             no_log              => 1,
             keep_last_distances => 1,
@@ -123,7 +123,7 @@ sub get_spatial_params {
         $spatial_params->set_param(NO_PRINT_CONDITIONS_AFTER_PARSING => 1);
         
         #  caching this way could cause grief with mem usage
-        $self -> set_param (SPATIAL_PARAMS => $spatial_params);
+        $self->set_param (SPATIAL_PARAMS => $spatial_params);
     }
 
     return $spatial_params;
@@ -132,7 +132,7 @@ sub get_spatial_params {
 #sub DESTROY {
 #    my $self = shift;
 #    
-#    $self -> set_param (PARENT_POPULATION => undef);
+#    $self->set_param (PARENT_POPULATION => undef);
 #}
 
 
