@@ -11,28 +11,46 @@ use Carp;
 #use FindBin;
 use English qw { -no_match_vars };
 
-use mylib;
+use rlib;
 
 #  load up the user defined libs
-use Biodiverse::Config qw /use_base/;
-BEGIN {
-    use_base('SIRCA_LIB');
-}
+#use Biodiverse::Config qw /use_base/;
+#BEGIN {
+#    use_base('SIRCA_LIB');
+#}
 
 use Sirca::Landscape;
 
 local $| = 1;
 
-my $control_file = shift @ARGV || croak  "Please specify a control file.\n";
+#  make sure we can build using pp
+exit (0) if $ENV{BDV_PP_BUILDING};
 
-my $landscape = Sirca::Landscape -> new (control_file => $control_file);
+use Getopt::Long::Descriptive;
 
-$landscape -> run;
+my ($opt, $usage) = describe_options(
+  '%c <arguments>',
+  [ 'control_file|c=s',  'The control file containing the configuration parameters', { required => 1 } ],
+  [],
+  [ 'help',       "print usage message and exit" ],
+);
+
+if ($opt->help) {
+    print($usage->text);
+    exit;
+}
+
+
+my $control_file = $opt->control_file || croak  "Please specify a control file.\n";
+
+my $landscape = Sirca::Landscape->new (control_file => $control_file);
+
+$landscape->run;
 
 #  need to make sure the filename is specified by the GUI
 #  should also run it as the convention
-$landscape -> save_to_storable (filename => 'check.scs');
-#$landscape -> save_to_yaml ();
+$landscape->save_to_storable (filename => 'check.scs');
+
 
 exit;
 
