@@ -1,14 +1,10 @@
-#!/usr/bin/perl -w
-use strict;
-
-#!perl
-
 #  run the sirca model using the Sirca::Landscape package.
+
+use 5.016;
 
 use strict;
 use warnings;
 use Carp;
-#use FindBin;
 use English qw { -no_match_vars };
 
 use rlib;
