@@ -12,31 +12,67 @@ use Sirca::Landscape;
 use Sirca::Population;
 use GD::Image;
 use GD;
-use FindBin qw ( $Bin );
+#use FindBin qw ( $Bin );
 use File::Basename;
 use File::Spec;
 
 use English qw { -no_match_vars };
 
-#  add the lib folder if needed
-#eval 'use mylib';
-#use lib File::Spec->catfile( $Bin, '..', 'lib' );
 
 local $| = 1;
 
 #  run this from a directory on your machine
 #  edit these arguments as needed (they really should be command line args)
+#  make sure we can build using pp
+exit (0) if $ENV{BDV_PP_BUILDING};
 
-my $filename = shift @ARGV;            #  input file, must be an arg
-my %generate = (
-    generate_epicurve_files      => 1,
-    generate_epicurve_data_files => 1,
-    generate_spatial             => 1,
-    generate_animations          => 1,
+use Getopt::Long::Descriptive;
+
+my ($opt, $usage) = describe_options(
+  '%c <arguments>',
+  [ 'filename|f=s',  'The Sirca results file to extract results from', { required => 1 } ],
+  [ 'repetitions_to_create|r=s', 'Repetitions to create', {optional => 1, default => undef}],
+
+  [ 'generate_epicurve_files|gef=s',  'Generate epicurve files', {optional => 1, default => 1},
+  [ 'generate_epicurve_data_files|gedf=s',  'Generate epicurve data files', {optional => 1, default => 1},
+  [ 'generate_spatial|gspatial=s',  'Generate spatial data', {optional => 1, default => 1},
+  [ 'generate_animations|ganim=s',  'Generate dispersion animations', {optional => 1, default => 1},
+   
+  [],
+  [ 'help',       "print usage message and exit" ],
 );
 
+if ($opt->help) {
+    print($usage->text);
+    exit;
+}
+
+
+my $filename = $opt->filename; #  input file, must be an arg
+
+#  clunky
+my %generate = (
+    generate_epicurve_files
+      => $opt->generate_epicurve_files
+       ? \&generate_epicurve_files
+       : undef,
+    generate_epicurve_data_files
+      => $opt->generate_epicurve_data_files
+       ? \&generate_epicurve_data_files
+       : undef,
+    generate_spatial
+      => $opt->generate_spatial
+       ? \&generate_spatial
+       : undef,
+    generate_animations
+      => $opt->generate_animations
+       ? \&generate_animations
+       : undef,
+);
+
+my $reps_to_recreate = $opt->repetitions_to_create // 1;
 my %options = (
-    repetitions_to_create => [1..10],   #  which repetitions to animate and create spatial data for?
+    repetitions_to_create => [eval "$reps_to_recreate"],   #  which repetitions to animate and create spatial data for?
     delete_image_files    => 1,        #  cleanup as we go
     states_to_track       => [1,2,3],  #  which model states to track?
 );
@@ -49,9 +85,9 @@ croak $EVAL_ERROR if $EVAL_ERROR;
 
 my $master_models = $landscape->get_master_models;
 
-while (my ($sub, $run) = each %generate) {
-    next if not $run;
-    eval "$sub()";  #  run the sub
+while (my ($subname, $subref) = each %generate) {
+    next if not $subref;
+    eval $subref->();  #  run the sub
     croak $EVAL_ERROR if $EVAL_ERROR;
 }
 
