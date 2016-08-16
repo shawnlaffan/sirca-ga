@@ -120,6 +120,7 @@ sub get_spatial_params {
             no_log              => 1,
             keep_last_distances => 1,
         );
+        $spatial_params->set_param(NO_PRINT_CONDITIONS_AFTER_PARSING => 1);
         
         #  caching this way could cause grief with mem usage
         $self -> set_param (SPATIAL_PARAMS => $spatial_params);

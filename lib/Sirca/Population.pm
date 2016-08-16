@@ -129,6 +129,7 @@ sub new {  #  generate a new sirca population object
         
         $self -> update_log (text => $log_text);
         my $sp_params = Biodiverse::SpatialParams -> new (conditions => $max_nbrhood);
+        #$sp_params->set_param (NO_PRINT_CONDITIONS_AFTER_PARSING => 1);
         $search_blocks = $sp_index -> predict_offsets (spatial_params => $sp_params);
         $self -> set_param (INDEX_SEARCH_BLOCKS => $search_blocks);  #  cache it
     }
@@ -1483,6 +1484,7 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
         my $max_nbrhood_sp_params = Biodiverse::SpatialParams -> new (
             params => $max_nbrhood,
         );
+        $max_nbrhood_sp_params->set_param(NO_PRINT_CONDITIONS_AFTER_PARSING => 1);
 
         $search_blocks =  $self -> predict_offsets (
             spatial_params => $max_nbrhood_sp_params,
