@@ -37,7 +37,7 @@ sub load_params {  # read in the parameters file, set the PARAMS subhash.
     $file->close;
 
     my $params = eval ($data);
-    $self->set_param(%$params);
+    $self->set_params(%$params);
     #print Data::Dumper::Dumper($params);
     return;
 }

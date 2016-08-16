@@ -81,7 +81,7 @@ sub new {  #  generate a new sirca population object
     }
     
     #  we're still here so it must need to be built
-    $self -> set_param (%args);
+    $self -> set_params (%args);
 
     if (exists $args{control_files}) {
         #  parse the relevant files
@@ -92,7 +92,7 @@ sub new {  #  generate a new sirca population object
         }
     }
     elsif (exists $args{params_hash}) {
-        $self -> set_param (%{$args{params_hash}});
+        $self -> set_params (%{$args{params_hash}});
     }
     else {
         croak "Didn't get control_files nor a params_hash! (or grammar lessons)";
@@ -1758,7 +1758,10 @@ sub sum_groups_at_state {
 sub process_args {  #  check we have the required arguments
     my $self = shift;
     
-    croak "I NEED THE STATE TRANSITIONS\n" if ! $self->get_param('TRANSITIONS');
+    croak "I NEED THE STATE TRANSITIONS FOR MODEL "
+        . $self->get_param('LABEL')
+        . "\n"
+      if ! $self->get_param('TRANSITIONS');
     
     if (! defined $self -> get_param ('DENSITY_FILES')) {
         carp "Parameter DENSITY_FILES not specified\n";
