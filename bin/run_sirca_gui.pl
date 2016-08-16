@@ -13,12 +13,6 @@ use English qw { -no_match_vars };
 
 use rlib;
 
-#  load up the user defined libs
-#use Biodiverse::Config qw /use_base/;
-#BEGIN {
-#    use_base('SIRCA_LIB');
-#}
-
 use Sirca::Landscape;
 
 local $| = 1;
