@@ -4,6 +4,7 @@ package Sirca::Population;
 
 #  handle a collection of Sirca::Groups as a single connected population (essentially a metapopulation)
 
+use 5.016;
 use strict;
 use warnings;
 
@@ -22,6 +23,7 @@ use Data::Dumper qw /Dumper/;
 $Data::Dumper::Sortkeys = 1;
 use Carp;
 use Scalar::Util qw /blessed/;
+use List::Util qw /max/;
 use File::Spec;
 use Math::Trig;
 use Readonly;
@@ -153,14 +155,11 @@ sub do_event_cull {
 
     return if defined $num_to_do && $num_to_do <= 0;
 
-    my $min_thresh = defined ($args{min_dens})
-                    ? $args{min_dens}
-                    : 0;  #  default to 0
-    my $max_thresh = defined ($args{max_dens})
-                    ? $args{max_dens}
-                    : 1;  #  default to 1
+    my $min_thresh = $args{min_dens} // 0;  #  default to 0
+    my $max_thresh = $args{max_dens} // 1;  #  default to 1
 
-    my $min_x = $args{min_x};  #  as with the rand_state_change we need to allow the neighbourhood definitions
+    #  as with the rand_state_change we need to allow the neighbourhood definitions
+    my $min_x = $args{min_x};
     my $max_x = $args{max_x};
     my $min_y = $args{min_y};
     my $max_y = $args{max_y};
@@ -186,9 +185,10 @@ sub do_event_cull {
 
     my $updated = 0;
     while ($updated < $num_to_do) {
+        last if !scalar @$random_list_ref; #  we've run out of groups
         #  randomly select a cell to update
         my $group_id = shift @$random_list_ref;
-        last if ! defined $group_id;  #  we've run out of groups
+        next if ! defined $group_id;  #  we've run out of groups
         my $gp_ref = $self->get_group_ref (group => $group_id);
         my $density_pct = $gp_ref->get_density_pct;
         next if (   $density_pct <= $min_thresh
@@ -228,16 +228,18 @@ sub do_event_cull {
 sub do_event_vaccinate {
     my $self = shift;
     my %args = @_;
-    #   set the state of a set of groups to be the immunestate
+    #   set the state of a set of groups to be the immune state
     
     #  need to handle the spatial params definition WRT the spatial index
     #  set a flag to use the spatial index or not
     #  flag can be the maximum distance if using complex params (eg an annulus)
     
-    #  and now set up the search blocks (may generalise to own sub, as this applies to most global events)
+    #  and now set up the search blocks
+    #  (may generalise to own sub, as this applies to most global events)
     my $search_blocks;
     my $max_nbrhood = $args{maxnbrhood};
-    #  could put an option in to check the complexity of the definition.  if simple then use the index
+    #  Could put an option in to check the complexity of the definition.
+    #  If simple then use the index.
     if (defined $max_nbrhood) {  #  we can search using the index
         $self->update_log (text => ($self->get_param ('LABEL') . ": Determining index search blocks using maximum search nbrhood, $max_nbrhood\n"));
         my $max_nbrhood_sp_params = Biodiverse::SpatialParams->new (conditions => $max_nbrhood);
@@ -254,16 +256,10 @@ sub do_event_state_change {
     my $self = shift;
     my %args = @_;
     
-    my $new_state = defined ($args{state})
-                ? $args{state}
-                : $self->get_param ('DEFAULTSTATE');
+    my $new_state = $args{state} // $self->get_param ('DEFAULTSTATE');
 
-    my $min_thresh = defined ($args{min_dens})
-                    ? $args{min_dens}
-                    : 0;  #  default to 0
-    my $max_thresh = defined ($args{max_dens})
-                    ? $args{max_dens}
-                    : 1;  #  default to 1
+    my $min_thresh = $args{min_dens} // 0;  #  default to 0
+    my $max_thresh = $args{max_dens} // 1;  #  default to 1
     
     my $min_x = $args{min_x};
     my $max_x = $args{max_x};
@@ -325,21 +321,13 @@ sub do_event_rand_state_change {
     my $self = shift;
     my %args = @_;
     
-    my $new_state = defined ($args{state})
-                ? $args{state}
-                : $self->get_param ('DEFAULTSTATE');
-    my $num_to_do = defined ($args{count}) 
-                ? $args{count}
-                : 0;   #  default to nothing
+    my $new_state = $args{state} // $self->get_param ('DEFAULTSTATE');
+    my $num_to_do = $args{count} // 0;   #  default to nothing
 
     return if $num_to_do <= 0;
     
-    my $min_thresh = defined ($args{min_dens})
-                    ? $args{min_dens}
-                    : 0;  #  default to 0
-    my $max_thresh = defined ($args{max_dens})
-                    ? $args{max_dens}
-                    : 1;  #  default to 1
+    my $min_thresh = $args{min_dens} // 0;  #  default to 0
+    my $max_thresh = $args{max_dens} // 1;  #  default to 1
 
     my $min_x = $args{min_x};
     my $max_x = $args{max_x};
@@ -363,10 +351,12 @@ sub do_event_rand_state_change {
 
     my $updated = 0;
     while ($updated < $num_to_do) {
+        last if !scalar @$random_list_ref;  #  no more groups
+
         #  randomly select a cell to update
         my $group_id = shift @$random_list_ref;
         
-        last if ! defined $group_id;  #  we've run out of groups
+        next if ! defined $group_id;  #  we've run out of groups
         
         my $gp_ref = $self->get_group_ref (group => $group_id);
         my $density_pct = $gp_ref->get_density_pct;
@@ -403,9 +393,9 @@ sub get_groups_at_state {  #  returns a hash of groups in a specified state
     my %args = @_;
     my $state = $args{state};
     
-    croak "state not specified\n" if ! defined $state;
+    croak "state not specified\n" if !defined $state;
     
-    $self->{STATES}{$state} = {} if ! defined $self->{STATES}{$state};
+    $self->{STATES}{$state} //= {};
     
     return wantarray ? %{$self->{STATES}{$state}} : $self->{STATES}{$state};
 
@@ -437,6 +427,8 @@ sub get_group_ref {
     my $self = shift;
     my %args = @_;
     
+    no autovivification;
+
     #  croak if not existing
     croak "Group does not exist\n"
       if ! defined $args{group} or ! exists $self->{GROUPS}{$args{group}};
@@ -498,7 +490,7 @@ sub get_changed_this_iter {
     my $self = shift;
     
     #  make it an empty hash by default
-    $self->{CHANGEDTHISITER} = {} if ! defined $self->{CHANGEDTHISITER};
+    $self->{CHANGEDTHISITER} //= {};
     
     return wantarray ? %{$self->{CHANGEDTHISITER}} : $self->{CHANGEDTHISITER};
 }
@@ -510,7 +502,7 @@ sub run {  #  run the model for $some number of iterations
     my $rand = $self->get_param ('RAND_OBJECT');
     
     my $start_iter = $self->get_param('TIMESTEP') + 1;  #  makes iter 0 the start conditions, then first run is iter 1
-    my $end_iter = $self->get_param('TIMESTEP') + ($args{iterations} || 1);
+    my $end_iter   = $self->get_param('TIMESTEP') + ($args{iterations} || 1);
     
     my $transmissions_count = 0;
     my $bodycount = 0;
@@ -727,8 +719,7 @@ sub run_interactions {
             next BY_NBR
               if $self->changed_state_this_iter (group => $neighbour);
             
-            my $nbr_state = $nbr_gp_ref->get_state;
-            $nbr_state = $self->get_param ('DEFAULT_STATE') if ! defined $nbr_state;
+            my $nbr_state = $nbr_gp_ref->get_state // $self->get_param ('DEFAULT_STATE');
             
             #  skip non-susceptibles. In future versions we might increase the
             #  latency fraction instead of skipping
@@ -900,10 +891,10 @@ sub get_piecewise_value {
             $left_pos  = $pieces[0];
             $right_pos = $pieces[0];
         }
-        elsif ($position >= $pieces[$#pieces]) {  #  to the right - snap it
+        elsif ($position >= $pieces[-1]) {  #  to the right - snap it
             $snap = 2;
-            $left_pos  = $pieces[$#pieces];
-            $right_pos = $pieces[$#pieces];
+            $left_pos  = $pieces[-1];
+            $right_pos = $pieces[-1];
         }
         else {
             my $j = $#pieces;
@@ -935,7 +926,7 @@ sub get_piecewise_value {
     my @vals;
     my $upper_index = $#{$fn_hash{$left_pos}};  #  get the outer values
     if ($snap) {
-        my $pos = $snap == 1 ? $pieces[0] : $pieces[$#pieces];  #  can only be 1 or 2
+        my $pos = $snap == 1 ? $pieces[0] : $pieces[-1];  #  can only be 1 or 2
         $vals[0] = $fn_hash{$pos}[0];
         $vals[1] = $fn_hash{$pos}[$upper_index];
     }
@@ -945,7 +936,7 @@ sub get_piecewise_value {
 
         my $j = 0; #  ensure we index as 0 and 1
         foreach my $i (0, $upper_index) {
-            my $left_val = $fn_hash{$left_pos}[$i];
+            my $left_val  = $fn_hash{$left_pos}[$i];
             my $right_val = $fn_hash{$right_pos}[$i];
             my $val_range = $right_val - $left_val;
     
@@ -1109,7 +1100,8 @@ sub get_bodycount {
     return $bodycount;
 }
 
-#  very similar to do_event_mortality, except it does not store the event (because it should be called as an event)
+#  very similar to do_event_mortality, except it does not store the event
+#  (because it should be called as an event)
 sub do_event_group_cull {
     my $self = shift;
     my %args = @_;
@@ -1123,16 +1115,16 @@ sub do_event_group_cull {
     my $bodycount = $self->get_bodycount (%args);
     return 0 if $bodycount == 0;  #  don't do anything if the bodycount is zero
 
-    my $building = $self->get_param ('BUILDING');
+    my $building  = $self->get_param ('BUILDING');
     my $time_step = $self->get_param ('TIMESTEP');
     
-    my $gp_ref = $self->get_group_ref (group => $group_id);
+    my $gp_ref  = $self->get_group_ref (group => $group_id);
     my $density = $gp_ref->get_density;
     
     #print "CULLING $group_id, $bodycount, $density\n";
     
     $density -= $bodycount;
-    $density = 0 if $density < 0;
+    $density = max (0, $density);
     $gp_ref->set_param (DENSITY => $density);
     $gp_ref->set_param (DENSITY_PCT => $self->convert_dens_to_pct (value => $density));
 
@@ -1154,31 +1146,33 @@ sub do_event_mortality {
     my $self = shift;
     my %args = @_;
 
-    my $group_id = $args{group} || croak "group not specified\n";
+    my $group_id = $args{group} // croak "group not specified\n";
     
     if (! $self->group_exists (group => $group_id)) {
         croak "Group $group_id does not exist in do_event_mortality\n";
     }
 
-    my $bodycount = $self->get_bodycount (%args);  #  allows laziness in the code, as we can handle all the variations this way
-    return 0 if $bodycount == 0;  #  don't do anything if the bodycount is zero
+    #  allows laziness in the code, as we can handle all the variations this way
+    my $bodycount = $self->get_bodycount (%args);  
+    return 0 if !$bodycount;  #  don't do anything if the bodycount is zero
 
     my $building = $self->get_param ('BUILDING');
     my $time_step = $self->get_param ('TIMESTEP');
     
     if ($building) {
         #  record the event in the scheduler
-        $self->schedule_group_event ( group => $group_id,
-                                        endtime => $time_step,
-                                        bodycount => $bodycount,
-                                        type => 'mortality'
-                                        );
+        $self->schedule_group_event (
+            group     => $group_id,
+            endtime   => $time_step,
+            bodycount => $bodycount,
+            type      => 'mortality'
+        );
     }
     
-    my $gp_ref = $self->get_group_ref (group => $group_id);
+    my $gp_ref  = $self->get_group_ref (group => $group_id);
     my $density = $gp_ref->get_density;
     $density -= $bodycount;
-    $density = 0 if $density < 0;
+    $density = max (0,  $density);  #  snap to zero if negative
     $gp_ref->set_param (DENSITY => $density);
     $gp_ref->set_param (DENSITY_PCT => $self->convert_dens_to_pct (value => $density));
     
@@ -1186,10 +1180,11 @@ sub do_event_mortality {
     
     if ($building and $density == 0) {
         #  total death.  set it back to the default state
-        $self->update_group_state (group => $group_id,
-                                     state => $self->get_param ('DEFAULT_STATE'),
-                                     timestep => $time_step,
-                                    );
+        $self->update_group_state (
+            group    => $group_id,
+            state    => $self->get_param ('DEFAULT_STATE'),
+            timestep => $time_step,
+        );
     }
     
     return $bodycount;    
@@ -1199,11 +1194,11 @@ sub do_event_mortality {
 sub calc_time_of_state_change {#  determine how long it will remain in this state as a random function of the time range
     my $self = shift;
     my %args = @_;
-    my $group_id = $args{group} || croak "coord not specified\n";
+
+    my $group_id = $args{group} // croak "coord not specified\n";
     #croak "No Coordinate specified for calc_time_of_state_change()\n" if ! defined $group_id;
     my $gp_ref = $self->get_group_ref (group => $group_id);
-    my $state = $gp_ref->get_state;
-    $state = $self->get_param ('DEFAULT_STATE') if ! defined $state;
+    my $state  = $gp_ref->get_state // $self->get_param ('DEFAULT_STATE');
     
     my $rand = $self->get_param ('RAND_OBJECT');
     my $timestep = $self->get_param ('TIMESTEP');
@@ -1213,9 +1208,13 @@ sub calc_time_of_state_change {#  determine how long it will remain in this stat
     my ($state_time_min, $state_time_max) = @{$trans_array[$state]};
     #  if they are defined then we use them
     if (defined $state_time_min && defined $state_time_max) {
-        $state_time_max = $state_time_min if (! defined $state_time_max || $state_time_min > $state_time_max);
+        if (!defined $state_time_max || $state_time_min > $state_time_max) {
+            $state_time_max = $state_time_min;
+        }
         my $time_in_state = int ($state_time_min + $rand->rand ($state_time_max - $state_time_min));
-        print "Successful allocation of max time in state $state_time_max\n" if $state_time_max == $time_in_state;
+        if ($state_time_max == $time_in_state) {
+            say "Successful allocation of max time in state $state_time_max"
+        }
         
         $time_of_change = $time_in_state + $timestep;
         $gp_ref->set_param (TIME_OF_NEXT_STATE_CHANGE => $time_of_change);
@@ -1245,24 +1244,25 @@ sub update_group_state {  #  Update the state of a group.
     my $self = shift;
     my %args = @_;
     
-    croak "state parameter not specified\n"  if ! defined $args{state};
-    croak "group parameter not specified\n" if ! defined $args{group};
+    croak "state parameter not specified\n"
+      if ! defined $args{state};
+    croak "group parameter not specified\n"
+      if ! defined $args{group};
     
     my $building = $self->get_param ('BUILDING');
     
-    my $group_id = $args{group};
+    my $group_id  = $args{group};
     my $new_state = $args{state};
-    my $source = $args{source};  #  used to record where it came from.  defaults to undef
-    my $default_state = $self->get_param ('DEFAULTSTATE');
+    my $source    = $args{source};  #  used to record where it came from.  defaults to undef
+    my $default_state    = $self->get_param ('DEFAULTSTATE');
     my $current_timestep = $self->get_param ('TIMESTEP');
     
     #  get the group's current state
     my $gp_ref = $self->get_group_ref (group => $group_id);
-    my $current_state = $gp_ref->get_state;
-    $current_state = $default_state if ! defined $current_state;
+    my $current_state = $gp_ref->get_state // $default_state;
     
     #  get the relevant change timings
-    my $t_last_state_change = $gp_ref->get_param ('TIME_OF_LAST_STATE_CHANGE');
+    my $t_last_state_change      = $gp_ref->get_param ('TIME_OF_LAST_STATE_CHANGE');
     my $prev_t_next_state_change = $gp_ref->get_param ('TIME_OF_NEXT_STATE_CHANGE');
     
     
@@ -1277,50 +1277,58 @@ sub update_group_state {  #  Update the state of a group.
     
 
     #  update self's trackers
-    $self->{STATES}{$new_state}{$group_id} ++ if $new_state != $default_state;
+    if ($new_state != $default_state) {
+        $self->{STATES}{$new_state}{$group_id} ++;
+    }
     delete $self->{STATES}{$current_state}{$group_id};
     $self->track_state_changed (group => $group_id);
     $self->track_changed_this_iter (group => $group_id);
-    
-    if ($building) {  #  if we're in the first run then we need to schedule some events
-        #  cancel the previously scheduled state changes (if they exist)
-        #  but only if it scheduled events to occur after this timestep
-        #  these are normally due to complete mortality or vaccination
+
+    #  if we're in the first run then we need to schedule some events
+    #  cancel the previously scheduled state changes (if they exist)
+    #  but only if it scheduled events to occur after this timestep
+    #  these are normally due to complete mortality or vaccination
+    if ($building) {
     #    need to check if we are changing the current timestep.  
-        if ((defined $prev_t_next_state_change) and $prev_t_next_state_change > $current_timestep) {
+        if ((defined $prev_t_next_state_change)
+                 and $prev_t_next_state_change > $current_timestep) {
             #  check the transition to this state
             if (defined $t_last_state_change) {
                 #  go back to the last state change and amend the predicted endtime
-                $self->schedule_group_event ( group => $group_id,
-                                                timestep => $t_last_state_change,
-                                                endtime => $current_timestep,
-                                                type => 'update_group_state'
-                                                );
+                $self->schedule_group_event (
+                    group    => $group_id,
+                    timestep => $t_last_state_change,
+                    endtime  => $current_timestep,
+                    type     => 'update_group_state'
+                );
             }
             #  cancel the transition to the next state
-            $self->cancel_group_event (   group => $group_id,
-                                            timestep => $prev_t_next_state_change,
-                                            type => 'update_group_state',
-                                        );
+            $self->cancel_group_event (
+                group    => $group_id,
+                timestep => $prev_t_next_state_change,
+                type     => 'update_group_state',
+            );
         }
     
         #  now record these events
         #  first we record this event in the schedule
         #  if it already exists then this will put more info onto it
-        $self->schedule_group_event ( group => $group_id,
-                                        state => $new_state,
-                                        endtime => $t_next_state_change,
-                                        source => $source,
-                                        timestep => $current_timestep,
-                                        type => 'update_group_state',
-                                       );
+        $self->schedule_group_event (
+            group    => $group_id,
+            state    => $new_state,
+            endtime  => $t_next_state_change,
+            source   => $source,
+            timestep => $current_timestep,
+            type     => 'update_group_state',
+        );
         #  now we schedule the next state change (if there is one)
         if (defined $t_next_state_change) {
-            $self->schedule_group_event ( group => $group_id,
-                                            timestep => $t_next_state_change,
-                                            state => $self->calc_next_state (state => $new_state),
-                                            type => 'update_group_state',
-                                           );
+            $self->schedule_group_event (
+                group => $group_id,
+                timestep => $t_next_state_change,
+                state => $self->calc_next_state (state => $new_state),
+                type => 'update_group_state',
+            );
         }
     }
     
@@ -1331,7 +1339,7 @@ sub update_group_state {  #  Update the state of a group.
 sub delete_group {  
     my $self = shift;
     my %args = @_;
-    my $group_id = $args{group} || croak "coord not specified\n";
+    my $group_id = $args{group} // croak "coord not specified\n";
 
     return if ! (exists $self->{GROUPS}{$group_id});  #  does not exist anyway...
     
@@ -1371,11 +1379,14 @@ sub delete_group {
 sub delete_from_spatial_index {
     my $self = shift;
     my %args = @_;
-    my $group_id = $args{group} || croak "group not specified\n";
+    my $group_id = $args{group} // croak "group not specified\n";
     my $group_ref = $self->get_group_ref (group => $group_id);
     
     my $index = $self->get_param ('SPATIAL_INDEX');
-    $index->delete_from_index (element => $group_id, element_array => scalar $group_ref->get_coord_array);
+    $index->delete_from_index (
+        element       => $group_id,
+        element_array => scalar $group_ref->get_coord_array,
+    );
 }
 
 #  delete a coord entry from the neighbour matrix
@@ -1460,7 +1471,7 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
 
     #  empty hash if we don't want any neighbours
     if ($max_nbr_count == 0) {
-        $nbrs = {} ;
+        $nbrs = {};
     }
 
     if (defined $nbrs) {
@@ -1475,10 +1486,9 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
     if (! defined $search_blocks) {
         my $max_nbrhood = $self->get_param ('MAXNBRHOOD');
         $self->update_log (
-            text => ""
-                    . $self->get_param ('LABEL')
-                    . ": Determining index search blocks using maximum "
-                    . "search nbrhood, $max_nbrhood\n",
+            text => $self->get_param ('LABEL')
+                  . ": Determining index search blocks using maximum "
+                  . "search nbrhood, $max_nbrhood\n",
         );
 
         my $max_nbrhood_sp_params = Biodiverse::SpatialParams->new (
@@ -1518,10 +1528,10 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
         
         #  and let the neighbour keep a track of us (lousy Flanders)
         foreach my $nbr (keys %nbrs_with_dist) {
-            my $nbr_gp_ref = $self->get_group_ref (group => $nbr);
+            my $nbr_gp_ref  = $self->get_group_ref (group => $nbr);
             my $nbr_of_list = 'ISA_NBR_OF_' . $self->get_param ('LABEL');
-            my $nbr_of_ref = $nbr_gp_ref->get_param ($nbr_of_list);
-            if (! defined $nbr_of_ref) {
+            my $nbr_of_ref  = $nbr_gp_ref->get_param ($nbr_of_list);
+            if (!defined $nbr_of_ref) {
                 $nbr_of_ref = {};
                 $nbr_gp_ref->set_param ($nbr_of_list => $nbr_of_ref);
             }
@@ -1531,7 +1541,6 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
             #print  "";  #  debug hook
         }
     }
-
 
     return wantarray ? %nbrs_with_dist : \%nbrs_with_dist;
 }
@@ -1556,6 +1565,7 @@ sub get_neighbours {  #  get the list of neighbours within the specified distanc
     #  skip those elements that we want to ignore - allows us to avoid including
     #  element_list1 elements in these neighbours,
     #  therefore making neighbourhood parameter definitions easier.
+    #  Should do a slice assign.
     my %exclude_hash = $self->array_to_hash_keys (list => $args{exclude_list}, value => 1);
 
     #my $spatialConditions = $spatialParamsRef->{conditions};
@@ -1569,8 +1579,12 @@ sub get_neighbours {  #  get the list of neighbours within the specified distanc
         my $index_coord = $index->snap_to_index (element_array => $centre_coord_ref);
         foreach my $offset (keys %{$args{index_offsets}}) {
             #  need to get an array from the index to fit with the get_groups results
-            push @compare_list, ($index->get_index_elements_as_array (element => $index_coord,
-                                                                       offset => $offset));
+            push @compare_list,
+                ($index->get_index_elements_as_array (
+                    element => $index_coord,
+                    offset => $offset
+                    ),
+                 );
         }
     }
     
@@ -1584,8 +1598,11 @@ sub get_neighbours {  #  get the list of neighbours within the specified distanc
         my $gp_ref = $self->get_group_ref (group => $element2);
         my $coord  = $gp_ref->get_param ('COORD_ARRAY');
 
-        next NBR if ! $sp_params->evaluate (coord_array1 => $centre_coord_ref,
-                                              coord_array2 => $coord);
+        next NBR
+          if !$sp_params->evaluate (
+            coord_array1 => $centre_coord_ref,
+            coord_array2 => $coord
+          );
 
         # If it has survived then it must be valid.
         $valid_nbrs{$element2} = $sp_params->get_param ('LAST_DISTS');
@@ -1600,11 +1617,10 @@ sub get_neighbours_as_array {
     return wantarray ? @array : \@array;  #  return reference in scalar context
 }
     
-
-sub get_distances {  #  calculate the distances between the coords in two sets of elements
-                     #  expects refs to two element arrays and the spatial parameters hash
-                     #  at the moment we are only calculating the distances - k stuff can be done later
-
+#  calculate the distances between the coords in two sets of elements
+#  expects refs to two element arrays and the spatial parameters hash
+#  at the moment we are only calculating the distances - k stuff can be done later
+sub get_distances {
     my $self = shift;
     my %args = @_;
 
@@ -1734,12 +1750,12 @@ sub sum_densities_at_state {
     my $state = $args{state};
     croak "state not specified\n" if ! defined $state;
 
-    my $sumInState = 0;
+    my $sum_in_state = 0;
     foreach my $group_id (keys %{$self->get_groups_at_state (state => $state)}) {
-        my $gp_ref = $self->get_group_ref (group => $group_id);
-        $sumInState += $gp_ref->get_density;
+        my $gp_ref     = $self->get_group_ref (group => $group_id);
+        $sum_in_state += $gp_ref->get_density;
     }
-    return $sumInState;
+    return $sum_in_state;
 }
 
 #  return the count of GROUPS in a particular state
@@ -2591,11 +2607,14 @@ sub numerically {$a <=> $b};
 #          Susceptible-Infected-Recovered Cellular Automata model. Preventive Veterinary Medicine.
 #
 #
-#  IMPLEMENTATION:
-#  The basic data structure uses hash tables.  It can get messy to read, but is pretty hierarchical.  Indexing using hash tables also speeds up access to the data by reducing unnecessary processing.
-#  The system states sub-hash {STATES} is indexed by the model states, each of which contains the set of coordinates satisfying those states.
-#  The other system data are stored by coordinate {GROUPS}, and include the states (same data as before, but different structure), densities, the %infected,
-#   the deltatron (time since last change), and perhaps some others which have yet to be impolemented like the size of the home range
+#  IMPLEMENTATION (possibly out of date):
+#  The basic data structure uses hash tables.  It can get messy to read, but is pretty hierarchical.
+#  Indexing using hash tables also speeds up access to the data by reducing unnecessary processing.
+#  The system states sub-hash {STATES} is indexed by the model states, each of which contains the
+#  set of coordinates satisfying those states.
+#  The other system data are stored by coordinate {GROUPS}, and include the states
+#  (same data as before, but different structure), densities, the %infected,
+#   the deltatron (time since last change), and perhaps some others which have yet to be implemented like the size of the home range
 #  The remainder of the hash elements represent the parameterisations for the object.
 #
 #  eg:
