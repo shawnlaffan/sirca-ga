@@ -189,7 +189,7 @@ sub do_event_cull {
         #  randomly select a cell to update
         my $group_id = shift @$random_list_ref;
         next if ! defined $group_id;  #  we've run out of groups
-        my $gp_ref = $self->get_group_ref (group => $group_id);
+        my $gp_ref = $self->get_group_ref_aa ($group_id);
         my $density_pct = $gp_ref->get_density_pct;
         next if (   $density_pct <= $min_thresh
                  || $density_pct  > $max_thresh);
@@ -284,7 +284,7 @@ sub do_event_state_change {
 
         last if ! defined $group_id;  #  we've run out of groups
 
-        my $gp_ref = $self->get_group_ref (group => $group_id);
+        my $gp_ref = $self->get_group_ref ($group_id);
         my $density_pct = $gp_ref->get_density_pct;
         
         next if    $density_pct <= $min_thresh
@@ -358,7 +358,7 @@ sub do_event_rand_state_change {
         
         next if ! defined $group_id;  #  we've run out of groups
         
-        my $gp_ref = $self->get_group_ref (group => $group_id);
+        my $gp_ref = $self->get_group_ref_aa ($group_id);
         my $density_pct = $gp_ref->get_density_pct;
         
         next if    $density_pct <= $min_thresh
@@ -421,6 +421,11 @@ sub get_groups_as_hash {
     return wantarray ? %{$self->{GROUPS}} : $self->{GROUPS};
 }
 
+#  hot sub - array args version for speed
+sub get_group_ref_aa {
+    $_[0]->{GROUPS}{$_[1]}
+      // croak "Group $_[1] does not exist\n";
+}
 
 #  get a ref to an individual group
 sub get_group_ref {
@@ -666,7 +671,7 @@ sub run_interactions {
     foreach my $infectious_gp (@$rand_infectious_list_ref) {
         
         #  get the associated object
-        my $infectious_gp_ref = $self->get_group_ref (group => $infectious_gp);
+        my $infectious_gp_ref = $self->get_group_ref_aa ($infectious_gp);
         my %nbrs = $self->get_neighbouring_groups (
             group_ref => $infectious_gp_ref,
             cache     => $cache_nbrs
@@ -710,7 +715,7 @@ sub run_interactions {
         foreach my $neighbour (@$nbr_rand_list_ref) {
             #print "Checking neighour $neighbour\n";
             next if (! $self->group_exists (group => $neighbour));  #  skip it if it does not exist
-            my $nbr_gp_ref = $self->get_group_ref (group => $neighbour);
+            my $nbr_gp_ref = $self->get_group_ref_aa ($neighbour);
             next if $nbr_gp_ref->get_density == 0;
             
             $interactions ++;
@@ -1060,7 +1065,7 @@ sub get_bodycount {
     
     if (! defined $bodycount) {
         #  get the density we need to work on
-        my $gp_ref = $self->get_group_ref (group => $group_id);
+        my $gp_ref = $self->get_group_ref_aa ($group_id);
         my $density;
         if ($args{use_orig_density}) {
             $density = $gp_ref->get_density_orig;
@@ -1118,7 +1123,7 @@ sub do_event_group_cull {
     my $building  = $self->get_param ('BUILDING');
     my $time_step = $self->get_param ('TIMESTEP');
     
-    my $gp_ref  = $self->get_group_ref (group => $group_id);
+    my $gp_ref  = $self->get_group_ref_aa ($group_id);
     my $density = $gp_ref->get_density;
     
     #print "CULLING $group_id, $bodycount, $density\n";
@@ -1169,7 +1174,7 @@ sub do_event_mortality {
         );
     }
     
-    my $gp_ref  = $self->get_group_ref (group => $group_id);
+    my $gp_ref  = $self->get_group_ref_aa ($group_id);
     my $density = $gp_ref->get_density;
     $density -= $bodycount;
     $density = max (0,  $density);  #  snap to zero if negative
@@ -1197,7 +1202,7 @@ sub calc_time_of_state_change {#  determine how long it will remain in this stat
 
     my $group_id = $args{group} // croak "coord not specified\n";
     #croak "No Coordinate specified for calc_time_of_state_change()\n" if ! defined $group_id;
-    my $gp_ref = $self->get_group_ref (group => $group_id);
+    my $gp_ref = $self->get_group_ref_aa ($group_id);
     my $state  = $gp_ref->get_state // $self->get_param ('DEFAULT_STATE');
     
     my $rand = $self->get_param ('RAND_OBJECT');
@@ -1258,7 +1263,7 @@ sub update_group_state {  #  Update the state of a group.
     my $current_timestep = $self->get_param ('TIMESTEP');
     
     #  get the group's current state
-    my $gp_ref = $self->get_group_ref (group => $group_id);
+    my $gp_ref = $self->get_group_ref_aa ($group_id);
     my $current_state = $gp_ref->get_state // $default_state;
     
     #  get the relevant change timings
@@ -1343,7 +1348,7 @@ sub delete_group {
 
     return if ! (exists $self->{GROUPS}{$group_id});  #  does not exist anyway...
     
-    my $group = $self->get_group_ref (group => $group_id);
+    my $group = $self->get_group_ref_aa ($group_id);
     my $state = $group->get_state; 
 
     $self->{GROUPS}{$group_id} = undef;
@@ -1380,7 +1385,7 @@ sub delete_from_spatial_index {
     my $self = shift;
     my %args = @_;
     my $group_id = $args{group} // croak "group not specified\n";
-    my $group_ref = $self->get_group_ref (group => $group_id);
+    my $group_ref = $self->get_group_ref_aa ($group_id);
     
     my $index = $self->get_param ('SPATIAL_INDEX');
     $index->delete_from_index (
@@ -1528,7 +1533,7 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
         
         #  and let the neighbour keep a track of us (lousy Flanders)
         foreach my $nbr (keys %nbrs_with_dist) {
-            my $nbr_gp_ref  = $self->get_group_ref (group => $nbr);
+            my $nbr_gp_ref  = $self->get_group_ref_aa ($nbr);
             my $nbr_of_list = 'ISA_NBR_OF_' . $self->get_param ('LABEL');
             my $nbr_of_ref  = $nbr_gp_ref->get_param ($nbr_of_list);
             if (!defined $nbr_of_ref) {
@@ -1616,7 +1621,7 @@ sub get_neighbours {  #  get the list of neighbours within the specified distanc
         next if exists $valid_nbrs{$element2};  #  already done this one
 
         #  make the neighbour coord available to the spatial_params
-        my $gp_ref = $self->get_group_ref (group => $element2);
+        my $gp_ref = $self->get_group_ref_aa ($element2);
         my $coord  = $gp_ref->get_param ('COORD_ARRAY');
 
         next NBR
@@ -1773,7 +1778,7 @@ sub sum_densities_at_state {
 
     my $sum_in_state = 0;
     foreach my $group_id (keys %{$self->get_groups_at_state (state => $state)}) {
-        my $gp_ref     = $self->get_group_ref (group => $group_id);
+        my $gp_ref     = $self->get_group_ref_aa ($group_id);
         $sum_in_state += $gp_ref->get_density;
     }
     return $sum_in_state;
@@ -2122,7 +2127,7 @@ sub to_image {
         my $gp_hash = $self->get_groups_at_state (state => $state);
         delete @gps_change_this_iter{keys %$gp_hash};
         foreach my $gp_id (keys %$gp_hash) {
-            my $gp_ref = $self->get_group_ref (group => $gp_id);
+            my $gp_ref = $self->get_group_ref_aa ($gp_id);
             my ($x, $y) = $self->convert_coord_map_to_image (coord => scalar $gp_ref->get_coord_array);
             
             #  now work out the colour.  The intensity depends on the density
@@ -2139,7 +2144,7 @@ sub to_image {
     
     #whatever is left has changed density
     foreach my $gp_id (keys %gps_change_this_iter) {
-        my $gp_ref = $self->get_group_ref (group => $gp_id);
+        my $gp_ref = $self->get_group_ref_aa ($gp_id);
         my $RGB = int ((1 - $gp_ref->get_density_pct) * 255);
         my $colour = $img->colorClosest ($RGB, $RGB, $RGB);
         my ($x, $y) = $self->convert_coord_map_to_image (coord => scalar $gp_ref->get_coord_array);
@@ -2211,7 +2216,7 @@ sub write_model_output_to_csv {
         BY_GROUP:
         foreach my $group (sort keys %$group_event_hash) {
 
-            my $group_ref = $self->get_group_ref (group => $group);
+            my $group_ref = $self->get_group_ref_aa ($group);
             my @coord = $group_ref->get_coord_array;
             my $density = $group_ref->get_density;
 
