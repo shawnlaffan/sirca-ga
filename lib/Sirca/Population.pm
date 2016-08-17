@@ -109,7 +109,7 @@ sub new {  #  generate a new sirca population object
     
     
     #  build the spatial index
-    my $b = $self->get_param ('BANDWIDTH') * 2;
+    my $b = $self->get_param ('BANDWIDTH');
     my @res = ($b, $b);  #  CLUNKY
     my $sp_index = Biodiverse::Index->new (
         parent       => $self,
