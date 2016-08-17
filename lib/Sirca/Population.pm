@@ -1461,9 +1461,9 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
 
     my $nbr_list_name = 'NBRS';
     #  mark nbrs from another object
-    $nbr_list_name .= defined $args{label}
-                    ? "_$args{label}"
-                    : "";  
+    if (defined $args{label}) {
+        $nbr_list_name .= "_$args{label}";
+    }
 
     my $nbrs = $central_gp_ref->get_param ($nbr_list_name);
     my $max_nbr_count = $central_gp_ref->get_param ('MAX_NBR_COUNT')
@@ -1546,6 +1546,27 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
 }
 
 
+sub get_spatial_params {
+    my $self = shift;
+    my %args = @_;
+    
+    my $spatial_params = $self->get_param ('SPATIAL_PARAMS');
+
+    return $spatial_params if defined $spatial_params;
+
+    my $spatial_conditions = $self->get_param ('NBRHOOD');
+    $spatial_params = Biodiverse::SpatialParams->new (
+        conditions          => $spatial_conditions,
+        no_log              => 1,
+        keep_last_distances => 1,
+    );
+    croak 'No SPATIAL_PARAMS found for group ' . $self->get_param('ID')
+      if !defined $spatial_params;
+
+    $self->set_param (SPATIAL_PARAMS => $spatial_params);
+
+    return $spatial_params;
+};
 
 
 ########################################################

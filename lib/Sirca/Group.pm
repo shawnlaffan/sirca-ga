@@ -113,14 +113,19 @@ sub get_spatial_params {
     my $spatial_params = $self->get_param ('SPATIAL_PARAMS');
 
     if (! defined $spatial_params) {
-        my $spatial_conditions = $self->get_param ('NBRHOOD')
-                               || $self->get_population->get_param('NBRHOOD');
-
-        $spatial_params = Biodiverse::SpatialParams->new (
-            conditions          => $spatial_conditions,
-            no_log              => 1,
-            keep_last_distances => 1,
-        );
+        if (my $spatial_conditions = $self->get_param ('NBRHOOD')) {
+            $spatial_params = Biodiverse::SpatialParams->new (
+                conditions          => $spatial_conditions,
+                no_log              => 1,
+                keep_last_distances => 1,
+            );
+        }
+        else {
+            #$self->get_population->get_param('NBRHOOD');
+            $spatial_params = $self->get_population->get_spatial_params;
+        }
+        croak 'No SPATIAL_PARAMS found for group ' . $self->get_param('ID')
+          if !defined $spatial_params;
         
         #  caching this way could cause grief with mem usage
         $self->set_param (SPATIAL_PARAMS => $spatial_params);
