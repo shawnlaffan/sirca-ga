@@ -119,7 +119,8 @@ sub new {  #  generate a new sirca population object
     
     $self->set_param (SPATIAL_INDEX => $sp_index);
     
-    #  and now set up the search blocks (may remove later, but it depends on how complex we allow the nbrs to be)
+    #  and now set up the search blocks
+    #  (may remove later, but it depends on how complex we allow the nbrs to be)
     my $search_blocks = $self->get_param ('INDEX_SEARCH_BLOCKS');
     if (! defined $search_blocks) {
         my $max_nbrhood = $self->get_param ('MAXNBRHOOD');
@@ -703,7 +704,7 @@ sub run_interactions {
         my @range = (ref $max_interact_count) =~ /ARRAY/
                     ? @$max_interact_count
                     : ($max_interact_count, $max_interact_count);
-        my $min = shift (@range);
+        my $min   = shift (@range);
         my $range = (pop @range) - $min;
         my $target_interact_count = int ($min + $rand->rand ($range));
 

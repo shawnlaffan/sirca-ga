@@ -382,7 +382,9 @@ sub run_one_repetition {
     #  generate the PRNG object from the end of the previous run
     my $state = $self->get_rand_state_at_end (repetition => $model_run - 1);
     if ($model_run and ! $state) {
-        warn "Missing rand state for repetition (", $model_run - 1, ") - have you tried to run a model out of the sequence?\n";
+        warn "Missing rand state for repetition (",
+                $model_run - 1,
+                ") - have you tried to run a model out of the sequence?\n";
     }
     my $rand = $self->initialise_rand (state => $state);  #  state overrides seed if defined
     
@@ -408,14 +410,14 @@ sub run_one_repetition {
             event_array => scalar $self->get_model_control (
                 model_iter => $i,
                 control => 'GLOBAL_EVENTS',
-            )
+            ),
         );
         $self->update_log (text => "$label: Scheduled $count global events\n");
         $count = $model->schedule_group_events  (
             event_array => scalar $self->get_model_control (
                 model_iter => $i,
-                control => 'GROUP_EVENTS',
-            )
+                control    => 'GROUP_EVENTS',
+            ),
         );
         $self->update_log (text => "$label: Scheduled $count group events\n");
     }
@@ -426,24 +428,31 @@ sub run_one_repetition {
     
     foreach my $mdl (@models) {
         my $count = $mdl->run_global_events;  #  run events for the zero timestep
-        $self->update_log (text => $mdl->get_param ('LABEL') . ": Ran $count global events for timestep 0\n");
+        $self->update_log (
+            text => $mdl->get_param ('LABEL')
+                  . ": Ran $count global events for timestep 0\n",
+        );
         $count = $mdl->run_group_events;
-        $self->update_log (text => $mdl->get_param ('LABEL') . ": Ran $count group events for timestep 0\n");
+        $self->update_log (
+            text => $mdl->get_param ('LABEL')
+                  . ": Ran $count group events for timestep 0\n",
+        );
     }
         
     #This is where the model actually happens
     #  sequence is :  1.  interact within a population,
     #                 2.  then between populations,
     #                 3.  then any other events like culling occur
-    INFECT:  foreach my $iter (1 .. $iterations) {
-        
+  INFECT:
+    foreach my $iter (1 .. $iterations) {
         # run the models
         foreach my $mdl_iter (0 .. $max_model_iter) {
             my $summary = $models[$mdl_iter]->run (iterations => 1);
-            $self->update_log (text => sprintf ("\t\ttransmissions %4d, bodycount %6.3f\n",
-                                            $$summary{TRANSMISSION_COUNT},
-                                            $$summary{BODY_COUNT})
-                                    );
+            $self->update_log (
+                text => sprintf ("\t\ttransmissions %4d, bodycount %6.3f\n",
+                    $summary->{TRANSMISSION_COUNT},
+                    $summary->{BODY_COUNT})
+            );
             #  we will track the transmissions & bodycount later
         }
         
@@ -457,18 +466,20 @@ sub run_one_repetition {
                 
                 my $mdl2 = $models[$mdl_iter2];
                 
-                my $interact_count = $self->interact_models (model1 => $mdl1,
-                                                               model2 => $mdl2,
-                                                               interact_state => 2
-                                                               );
+                my $interact_count = $self->interact_models (
+                    model1 => $mdl1,
+                    model2 => $mdl2,
+                    interact_state => 2,
+                );
 
                 #  only flag if something happened
                 if ($interact_count) {
-                    $self->update_log (text => sprintf "\t\t%s->%s interactions: %d\n",
-                                                    $mdl1->get_param('LABEL'),
-                                                    $mdl2->get_param('LABEL'),
-                                                    $interact_count
-                                          );
+                    $self->update_log (
+                        text => sprintf "\t\t%s->%s interactions: %d\n",
+                                    $mdl1->get_param('LABEL'),
+                                    $mdl2->get_param('LABEL'),
+                                    $interact_count
+                    );
                 }
             }
         }
@@ -479,13 +490,16 @@ sub run_one_repetition {
         #  but we need to pad the stats out with zeroes first
         if (! $stats_we_care_about{CARE_FACTOR}) {   
             my $remaining = $iterations - $iter;
-            $self->dump_to_yaml (text => "No infectious or latent cells left in this model.   Padding stats with zeroes\n");
+            $self->dump_to_yaml (
+                text => "No infectious or latent cells left in this model."
+                      . " Padding stats with zeroes\n"
+            );
             foreach my $j ($iter+1 .. $iterations) {
                 #print "$j ";
                 foreach my $mdl_iter (0 .. $max_model_iter) {
                     foreach my $state (1..3) {  #  CHEATING
-                        $$model_count_stats[$mdl_iter][$j][$state]  ->add_data (0);
-                        $$model_density_stats[$mdl_iter][$j][$state]->add_data (0);
+                        $model_count_stats->[$mdl_iter][$j][$state]  ->add_data (0);
+                        $model_density_stats->[$mdl_iter][$j][$state]->add_data (0);
                     }
                 }
             }
@@ -494,9 +508,10 @@ sub run_one_repetition {
     }
     
     #  store the rand states to use in a subsequent model or a rebuild
-    $self->store_rand_end_state ( repetition => $model_run,
-                                    state => scalar $rand->get_state,
-                                    );
+    $self->store_rand_end_state (
+        repetition => $model_run,
+        state => scalar $rand->get_state,
+    );
 }
 
 #  rerun a calibrated model
@@ -506,9 +521,9 @@ sub rerun_one_repetition {
     
     my $model_run = $args{repetition};
     
-    my $master_models = $self->get_master_models;
+    my $master_models  = $self->get_master_models;
     my $max_model_iter = $#$master_models;
-    my $model_count_stats = $self->get_model_count_stats_ref;
+    my $model_count_stats   = $self->get_model_count_stats_ref;
     my $model_density_stats = $self->get_model_density_stats_ref;
     
     my $iterations = defined $args{iterations}
@@ -568,6 +583,7 @@ sub rerun_one_repetition {
 sub interact_models {
     my $self = shift;
     my %args = @_;
+
     my $model1 = $args{model1} || croak "model2 not specified\n";
     my $model2 = $args{model2} || croak "model2 not specified\n";
     my $states = $self->get_param ('PROP_STATES');
@@ -591,9 +607,10 @@ sub interact_models {
         #  get the neighbours from model2
         my $infectious_gp_ref = $model1->get_group_ref (group => $mdl1_gp);
         #my $mdl1_coords = $infectious_gp_ref->get_coord_array;
-        my %nbrs = $model2->get_neighbouring_groups ( group_ref => $infectious_gp_ref,
-                                                        label => $model1->get_param ('LABEL'),
-                                                        );
+        my %nbrs = $model2->get_neighbouring_groups (
+            group_ref => $infectious_gp_ref,
+            label => $model1->get_param ('LABEL'),
+        );
         
         #  THE FOLLOWING IS MODIFIED FROM Population.pm - SHOULD PUT IN A UTILITY SUB
         my @nearest = sort { $nbrs{$a} <=> $nbrs{$b} } keys %nbrs;
@@ -603,8 +620,8 @@ sub interact_models {
             my @range = (ref $max_nbr_count_range) =~ /ARRAY/
                         ? @$max_nbr_count_range
                         : (0, $max_nbr_count_range);
-            my $min = shift (@range);
-            my $range = (pop @range) - $min;
+            my $min = shift @range;
+            my $range = pop (@range) - $min;
             my $num_nbrs_to_use = int ($min + $rand->rand ($range));
             @nearest = splice (@nearest, 0, $num_nbrs_to_use);
         }
@@ -640,22 +657,24 @@ sub interact_models {
             
             #  skip non-susceptibles. In future versions we might increase the
             #  latency fraction instead of skipping
-            next if $state != $$states2{suscstate};  
+            next if $state != $states2->{suscstate};  
             
             my $distance_apart = $nbrs{$neighbour};
             
             #print "VALUES:  $distance_apart , $bandwidth\n";
             
             #  product of densities (as %) weighted by kernel (inverse of distance adjusted by bandwidth)
-            my $jointProb =
-                            $infectious_gp_ref->get_density_pct *
-                            $nbr_gp_ref->get_density_pct *
-                           ($bandwidth / $distance_apart);
+            my $jointProb
+                = $infectious_gp_ref->get_density_pct
+                  * $nbr_gp_ref->get_density_pct
+                  * ($bandwidth / $distance_apart);
 
             if ($rand->rand < $jointProb) {
-                $model2->update_group_state (group => $neighbour,
-                                               state => $$states2{latentstate},
-                                               source => $mdl1_label);
+                $model2->update_group_state (
+                    group  => $neighbour,
+                    state  => $$states2{latentstate},
+                    source => $mdl1_label,
+                );
                 $transmission_count ++;
             }
             last BY_NBR if $interactions >= $target_interact_count;
@@ -680,7 +699,7 @@ sub update_model_stats {
     my @collate_dens_in_states   = (1,2,3);
     my %care_about = (  #  used for stopping criteria
         1 => 1,  
-        2 => 1
+        2 => 1,
     );
 
     #  save a few duplicate calcs by caching these values
