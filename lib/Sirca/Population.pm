@@ -1493,8 +1493,8 @@ sub get_neighbouring_groups {  #  uses the spatial index to accelerate the searc
 
         my $max_nbrhood_sp_params = Biodiverse::SpatialParams->new (
             params => $max_nbrhood,
+            no_log => 1,
         );
-        $max_nbrhood_sp_params->set_param(NO_PRINT_CONDITIONS_AFTER_PARSING => 1);
 
         $search_blocks =  $self->predict_offsets (
             spatial_params => $max_nbrhood_sp_params,
