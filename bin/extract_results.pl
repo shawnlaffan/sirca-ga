@@ -2,6 +2,7 @@
 
 #  generate a set of epicurves and animated gifs for a Sirca model run
 
+use 5.016;
 use strict;
 use warnings;
 use Carp;
@@ -163,16 +164,16 @@ sub generate_epicurve_data_files {
 
             my %fh_hash;
             for my $state (@$states_to_track) {
-                my $file = $name . '_EPICURVE_s' . $state . '_' . $stat_type . '_data.csv';
-                print "File $state: $file\n";
-                open my $fh, '>', $file or croak "Cannot open $file for writing";
+                my $file = "${name}_EPICURVE_s${state}_${stat_type}_data.csv";
+                say "File $state: $file";
+                open my $fh, '>', $file
+                  or croak "Cannot open $file for writing";
                 $fh_hash{$state} = $fh;
                 my @header = ('timestep');
                 foreach my $rep (1 .. $landscape->get_param('REPETITIONS')) {
                     push @header, "r$rep";
                 }
-                print {$fh} join q{,}, @header;
-                print {$fh} "\n";
+                say {$fh} join q{,}, @header;
             }
 
             #  count the zeroes
@@ -188,9 +189,8 @@ sub generate_epicurve_data_files {
                         @data = (0) x $landscape->get_param('REPETITIONS');
                     }
                     my $fh = $fh_hash{$state};
-                    print {$fh} join q{,}, $j, @data;
-                    print {$fh} "\n";
-                    
+                    say {$fh} join q{,}, $j, @data;
+
                     #  count the zeroes - NOT WORKING
                     #my $rep = 1;
                     foreach my $count (@data) {
@@ -207,16 +207,17 @@ sub generate_epicurve_data_files {
             }
             
             #  print out the zeroes
-            my $file = $name . '_ZEROES_' . $stat_type . '.csv';
-            print "Zero file: $file\n";
-            open my $fh, '>', $file or croak "Cannot open $file for writing";
+            my $file = "${name}_ZEROES_${stat_type}.csv";
+            say "Zero file: $file";
+            open my $fh, '>', $file
+              or croak "Cannot open $file for writing";
             my @keys = sort {$a<=>$b} keys %{$zeroes[-1]};
-            print {$fh} join q{,}, 'iter', @keys;
-            print {$fh} "\n";
+            
+            say {$fh} join q{,}, 'iter', @keys;
+            
             foreach my $iter (1 .. $#zeroes) {
                 my $zero_array = $zeroes[$iter];
-                print {$fh} join q{,}, $iter, @$zero_array{@keys};
-                print {$fh} "\n";
+                say {$fh} join q{,}, $iter, @$zero_array{@keys};
             }
         }
         $i++;
@@ -240,13 +241,12 @@ sub generate_epicurve_files {
                 );
                 
                 my $pfx = basename($master->get_param ('OUTPFX'));
-                my $file = $pfx
-                         . "_EPICURVE_s$state"
-                         . "_$type.csv";
+                my $file = "${pfx}_EPICURVE_s${state}_${type}.csv";
                 $file = File::Spec->rel2abs($file);
     
-                print "Printing $type epicurve to $file\n";
-                open (my $fh, '>', $file) or croak "Could not open $file\n";
+                say "Printing $type epicurve to $file";
+                open (my $fh, '>', $file)
+                  or croak "Could not open $file\n";
                 print {$fh} $stats;
                 $fh->close;
             }
@@ -300,7 +300,7 @@ sub generate_animations {
             }
     
             while (my $file = shift @files) {
-                print "Adding $file\n";
+                say "Adding $file";
                 # make a frame of right size
                 my $frame = GD::Image->new($file);
                 $gifdata .= $frame->gifanimadd (1, 0, 0, 20, 1, $last_image);     # add frame
@@ -313,9 +313,9 @@ sub generate_animations {
             }
             $gifdata .= $image->gifanimend;   # finish the animated GIF
             my $f_name = File::Spec->rel2abs ($first_file . 'anim.gif');
-            print "Output animation is in $f_name\n";
+            say "Output animation is in $f_name";
             open (my $fh, '>', $f_name)
-              || croak "Cannot open $f_name for writing\n";
+              or croak "Cannot open $f_name for writing\n";
             binmode $fh;
             print {$fh} $gifdata;
             $fh->close;
