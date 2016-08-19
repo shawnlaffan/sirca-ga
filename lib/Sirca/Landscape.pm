@@ -526,10 +526,7 @@ sub rerun_one_repetition {
     my $model_count_stats   = $self->get_model_count_stats_ref;
     my $model_density_stats = $self->get_model_density_stats_ref;
     
-    my $iterations = defined $args{iterations}
-                   ? $args{iterations}
-                   : $self->get_param ('ITERATIONS');
-    
+    my $iterations = $args{iterations} // $self->get_param ('ITERATIONS');
         
     #  clone the master models and then start working on them
     my @models;
@@ -652,8 +649,7 @@ sub interact_models {
             # already changed this iteration (eg from cured to susceptible), so skip it
             next if $model2->changed_this_iter (group => $neighbour);
             
-            my $state = $nbr_gp_ref->get_state;
-            $state = $model2->get_param ('DEFAULT_STATE') if ! defined $state;
+            my $state = $nbr_gp_ref->get_state // $model2->get_param ('DEFAULT_STATE');
             
             #  skip non-susceptibles. In future versions we might increase the
             #  latency fraction instead of skipping

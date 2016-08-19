@@ -54,10 +54,11 @@ sub cancel_event {
     
     my $eventRef = $self->get_events_ref;
     
-    if (! defined $args{events}) { #  delete the lot
+    if (!defined $args{events}) { #  delete the lot
         $eventRef->{$timeStep}{$coord} = undef;
         delete $eventRef->{$timeStep}{$coord};
-    } else {
+    }
+    else {
         foreach my $key (@{$args{events}}) {
             delete $eventRef->{$timeStep}{$coord}{uc($key)};
         }
@@ -166,7 +167,7 @@ sub write_model_image {
             if (exists $eventRef->{$timeStep}{$coord}{STATE}) {
                 #my $e = $$eventRef{$timeStep}{$coord};
                 next COORDS
-                  if ! defined $eventRef->{$timeStep}{$coord}{ENDTIME};
+                  if !defined $eventRef->{$timeStep}{$coord}{ENDTIME};
                 #  skip if no state set at the timestep we want
                 next COORDS
                   if $eventRef->{$timeStep}{$coord}{ENDTIME} < $plotTimeStep;
