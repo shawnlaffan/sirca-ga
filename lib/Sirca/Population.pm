@@ -2534,7 +2534,7 @@ sub run_global_events {
     my $self = shift;
     my %args = @_;
     
-    my $timestep = defined $args{timestep} ? $args{timestep} : $self->get_param ('TIMESTEP');
+    my $timestep = $args{timestep} // $self->get_param ('TIMESTEP');
     
     my %global_events = $self->get_global_events (timestep => $timestep);
     
@@ -2565,7 +2565,7 @@ sub run_group_events {
     my $self = shift;
     my %args = @_;
     
-    my $timestep = defined $args{timestep} ? $args{timestep} : $self->get_param ('TIMESTEP');
+    my $timestep = $args{timestep} // $self->get_param ('TIMESTEP');
     
     my %group_events = $self->get_group_events (timestep => $timestep);
     
