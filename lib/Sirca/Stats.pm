@@ -26,7 +26,7 @@ sub new {
     my $self = Biodiverse::Statistics->new;
 
     bless ($self, $class);  #Re-anneal the object
-    $self -> set_label ($label);
+    $self->set_label ($label);
     return $self;
 }
 
@@ -60,8 +60,8 @@ sub get_stats {
     my $self = shift;
     my %args = @_;
     
-    my $model_name = defined $args{name} ? $args{name} : 'noname';
-    my $label = $self->get_label;
+    my $model_name = $args{name} // 'noname';
+    my $label  = $self->get_label;
     my $nodata = -9999;
     
     no warnings 'uninitialized';  # silently treat undef as zero
@@ -71,8 +71,8 @@ sub get_stats {
     my ($pct05, $pct05index) = $self->percentile(5);
     my ($pct95, $pct95index) = $self->percentile(95);
     my $IQR = $Q3 - $Q1;
-    my $skew = $self -> skewness;
-    my $kurt = $self -> kurtosis;
+    my $skew = $self->skewness;
+    my $kurt = $self->kurtosis;
     my $median = $self->count ? $self->median : 0;
 
     my $line = sprintf (
@@ -90,8 +90,8 @@ sub get_stats {
         $pct95,
         $pct95 - $median,
         $median - $pct05,
-        (defined $skew ? $skew : $nodata),
-        (defined $kurt ? $kurt : $nodata),
+        ($skew // $nodata),
+        ($kurt // $nodata),
     );
     
     return $line;
