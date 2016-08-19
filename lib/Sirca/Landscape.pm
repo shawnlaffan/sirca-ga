@@ -288,7 +288,7 @@ sub get_rand_state_at_end {
     
     return undef if $repetition < 0;
     
-    return wantarray ? @{$$self{RAND_LAST_STATES}[$repetition]} : $$self{RAND_LAST_STATES}[$repetition];
+    return wantarray ? @{$self->{RAND_LAST_STATES}[$repetition]} : $self->{RAND_LAST_STATES}[$repetition];
 }
 
 sub store_rand_end_state {
@@ -298,7 +298,7 @@ sub store_rand_end_state {
     my $state = $args{state} || $args{rand_object}->get_state;
     
     # use a bit of autovivification
-    $$self{RAND_LAST_STATES}[$repetition] = $state;
+    $self->{RAND_LAST_STATES}[$repetition] = $state;
 }
 
 #  store the events for the current models
@@ -312,7 +312,7 @@ sub store_model_events {
     my $i = 0;
     foreach my $model (@$current_models) {
         my $events = $model->get_events_ref;
-        $$self{STORED_EVENTS}[$repetition][$i] = $events;
+        $self->{STORED_EVENTS}[$repetition][$i] = $events;
         $i++;
     }
 }
@@ -391,7 +391,7 @@ sub run_one_repetition {
     #  clone the master models and then start working on them
     my @models;
     foreach my $i (0 .. $max_model_iter) {
-        $self->update_log (text => "\tCLONING " . $$master_models[$i]->get_param ('LABEL') . "...");
+        $self->update_log (text => "\tCLONING " . $master_models->[$i]->get_param ('LABEL') . "...");
         my $model = $master_models->[$i]->clone;
         #print "DONE\n";
         $models[$i] = $model;
@@ -536,10 +536,10 @@ sub rerun_one_repetition {
     foreach my $i (0 .. $max_model_iter) {
         $self->update_log (
             text => "\tCLONING "
-                  . $$master_models[$i]->get_param ('LABEL')
+                  . $master_models->[$i]->get_param ('LABEL')
                   . "...\n",
         );
-        my $model = $$master_models[$i]->clone;
+        my $model = $master_models->[$i]->clone;
         #print "DONE\n";
         $models[$i] = $model;
 
@@ -600,7 +600,7 @@ sub interact_models {
     
     my $transmission_count = 0;
 
-    foreach my $mdl1_gp (keys %{$model1->get_groups_at_state (state => $$states1{propstate})}) {
+    foreach my $mdl1_gp (keys %{$model1->get_groups_at_state (state => $states1->{propstate})}) {
         #  snap the first model coord onto the second to determine what to interact with
         #  does not cache the neighbours to reduce other interactions
         
@@ -672,7 +672,7 @@ sub interact_models {
             if ($rand->rand < $jointProb) {
                 $model2->update_group_state (
                     group  => $neighbour,
-                    state  => $$states2{latentstate},
+                    state  => $states2->{latentstate},
                     source => $mdl1_label,
                 );
                 $transmission_count ++;

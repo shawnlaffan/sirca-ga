@@ -39,7 +39,7 @@ sub schedule_event {
     
     #  add the remaining keys as events
     foreach my $key (keys %args) {
-        $$eventRef{$timeStep}{$coord}{uc($key)} = $args{$key};
+        $eventRef->{$timeStep}{$coord}{uc($key)} = $args{$key};
     }
     
 }
@@ -55,14 +55,14 @@ sub cancel_event {
     my $eventRef = $self->get_events_ref;
     
     if (! defined $args{events}) { #  delete the lot
-        $$eventRef{$timeStep}{$coord} = undef;
-        delete $$eventRef{$timeStep}{$coord};
+        $eventRef->{$timeStep}{$coord} = undef;
+        delete $eventRef->{$timeStep}{$coord};
     } else {
         foreach my $key (@{$args{events}}) {
-            delete $$eventRef{$timeStep}{$coord}{uc($key)};
+            delete $eventRef->{$timeStep}{$coord}{uc($key)};
         }
-        if (! keys %{$$eventRef{$timeStep}{$coord}}) {  #  empty, delete it
-            delete $$eventRef{$timeStep}{$coord};
+        if (! keys %{$eventRef->{$timeStep}{$coord}}) {  #  empty, delete it
+            delete $eventRef->{$timeStep}{$coord};
         }
     }
     
@@ -70,8 +70,8 @@ sub cancel_event {
 
 sub get_events_ref {
     my $self = shift;
-    $$self{EVENTS} = {} if ! exists $$self{EVENTS};
-    return $$self{EVENTS};
+    $self->{EVENTS} //= {};
+    return $self->{EVENTS};
 }
 
 
@@ -90,13 +90,13 @@ sub write_model_output {
     
     my @line;
     foreach my $timeStep (keys %{$eventRef}) {
-        foreach my $coord (keys %{$$eventRef{$timeStep}}) {
+        foreach my $coord (keys %{$eventRef->{$timeStep}}) {
             my @line;
             foreach my $key (@vars) {
-                my $value = exists $$eventRef{$timeStep}{$coord}{$key}
-                          ? $$eventRef{$timeStep}{$coord}{$key}
+                my $value = exists $eventRef->{$timeStep}{$coord}{$key}
+                          ? $eventRef->{$timeStep}{$coord}{$key}
                           : "";  #  avoids undefs and autovivification
-                $value = "" if ! defined $value;
+                $value //= "";
                 push @line, $value;
             }
             print FILE join (",", $coord, $timeStep, @line) . "\n";
@@ -161,18 +161,18 @@ sub write_model_image {
         last TIMES if $timeStep > $plotTimeStep;  
     
         COORDS:
-        foreach my $coord (keys %{$$eventRef{$timeStep}}) {
+        foreach my $coord (keys %{$eventRef->{$timeStep}}) {
         
-            if (exists $$eventRef{$timeStep}{$coord}{STATE}) {
+            if (exists $eventRef->{$timeStep}{$coord}{STATE}) {
                 #my $e = $$eventRef{$timeStep}{$coord};
                 next COORDS
-                  if ! defined $$eventRef{$timeStep}{$coord}{ENDTIME};
+                  if ! defined $eventRef->{$timeStep}{$coord}{ENDTIME};
                 #  skip if no state set at the timestep we want
                 next COORDS
-                  if $$eventRef{$timeStep}{$coord}{ENDTIME} < $plotTimeStep;
+                  if $eventRef->{$timeStep}{$coord}{ENDTIME} < $plotTimeStep;
                 
                 $times{$coord}{STARTTIME} = $timeStep;
-                $times{$coord}{STATE} = $$eventRef{$timeStep}{$coord}{STATE};
+                $times{$coord}{STATE}     = $eventRef->{$timeStep}{$coord}{STATE};
             }
         }
         #last TIMES if $timeStep == $plotTimeStep;
@@ -184,15 +184,15 @@ sub write_model_image {
         
         (my $x, my $y) = $self->convert_coord_map_to_image (coord => $coord);
         #print "SETTING PIXEL $x, $y TO $stateColours{$state}, state is $state\n";# if $state == 3;
-        #print "$$self{$coord}{EVENTS}{$state}{$event}{STARTTIME} < $timeStep && " .
-        #                       "$$self{$coord}{EVENTS}{$state}{$event}{ENDTIME} > $timeStep\n";
-        $img -> setPixel($x, $y, $stateColours{$state});
+        #print "$self->{$coord}{EVENTS}{$state}{$event}{STARTTIME} < $timeStep && " .
+        #                       "$self->{$coord}{EVENTS}{$state}{$event}{ENDTIME} > $timeStep\n";
+        $img->setPixel($x, $y, $stateColours{$state});
     }
 
-    open (IMAGEFILE, ">$output_image");
-    binmode (IMAGEFILE);
-    print IMAGEFILE $img->png;
-    close IMAGEFILE;
+    open (my $img_file, '>', $output_image);
+    binmode $img_file;
+    print $img_file $img->png;
+    close $img_file;
 
 }
 

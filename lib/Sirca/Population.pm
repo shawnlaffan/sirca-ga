@@ -2523,6 +2523,7 @@ sub cancel_global_event {
                 delete $this_timestep->{$type};
             }
         }
+        # not sure this works - check the double deref
         if (! scalar keys %{$$this_type_by_t}) {  #  no more events, clean up
             delete $event_ref->{BY_TIMESTEP}{$time_step};
             #  may need some more deletions
